@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -23,6 +23,9 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,6 +42,15 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<Post> posts;
+    private List<PostEntity> postEntities;
 
+    @PrePersist
+    public void prePersist() {
+        if (this.role == null) {
+            this.role = Role.USER;
+        }
+        if (this.grade == null) {
+            this.grade = Grade.BRONZE;
+        }
+    }
 }
