@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Post {
+public class PostEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -33,11 +33,11 @@ public class Post {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserEntity user;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category category;
+    private CategoryEntity categoryEntity;
 
     @PrePersist
     public void prePersist() {

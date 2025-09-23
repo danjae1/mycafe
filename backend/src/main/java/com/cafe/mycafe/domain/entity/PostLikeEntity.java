@@ -2,32 +2,29 @@ package com.cafe.mycafe.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "comment_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"comment_id","user_id"})
-})
-
-public class CommentLike {
+@Table(name = "post_likes")
+public class PostLikeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @ManyToOne
-    @Column(name = "comment_id", nullable = false)
-    private Comment comment;
+    @JoinColumn(name ="post_id",nullable = false)
+    private PostEntity postEntity;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

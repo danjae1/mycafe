@@ -13,7 +13,7 @@ import java.util.List;
 @Table(name = "comments")
 @Data
 @Entity
-public class Comment {
+public class CommentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -24,22 +24,22 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name="post_id",nullable = false)
-    private Post post;
+    private PostEntity postEntity;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @ManyToOne
     @JoinColumn(name="parent_id")
-    private Comment parent;
+    private CommentEntity parent;
 
     @OneToMany(mappedBy = "comment",fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<Comment> replies;
+    private List<CommentEntity> replies;
 
     @OneToMany(mappedBy = "comment",fetch = FetchType.LAZY)
-    private List<CommentLike> likes;
+    private List<CommentLikeEntity> likes;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

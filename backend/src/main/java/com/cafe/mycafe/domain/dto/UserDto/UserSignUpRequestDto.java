@@ -1,4 +1,4 @@
-package com.example.naver_cafe.domain.dto.UserDto;
+package com.cafe.mycafe.domain.dto.UserDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,5 +12,6 @@ public class UserSignUpRequestDto {
     private String password;
     private String email;
     private String grade; // 브론즈 실버 골드
+
 
 }

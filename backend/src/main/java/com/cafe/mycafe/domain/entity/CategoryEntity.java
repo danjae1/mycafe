@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Category {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,5 +22,5 @@ public class Category {
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<Post> posts;
+    private List<PostEntity> postEntities;
 }
