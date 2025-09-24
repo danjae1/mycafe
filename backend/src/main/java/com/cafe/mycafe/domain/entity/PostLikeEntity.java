@@ -20,12 +20,14 @@ public class PostLikeEntity {
 
     @ManyToOne
     @JoinColumn(name ="post_id",nullable = false)
-    private PostEntity postEntity;
+    private PostEntity post;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
+    private boolean likedByUser; // 로그인한 유저가 이미 추천했는지
+
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime likedAt;
 }

@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-    List<CommentEntity> findByPost(PostEntity postEntity);  // 게시글 댓글 조회
+    List<CommentEntity> findByPostEntity(PostEntity postEntity);  // 게시글 댓글 조회
     List<CommentEntity> findByParent(CommentEntity parent); // 대댓글 조회
 
-    @Query("SELECT c FROM Comment c JOIN c.user u WHERE u.id = :userId")
+    @Query("SELECT c FROM CommentEntity c JOIN c.user u WHERE u.id = :userId")
     List<CommentEntity> findAllByUserId(@Param("userId") Long userId);
 }

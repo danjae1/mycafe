@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserLoginRequestDto {
+    //로그인 요청시 필요한 정보
     private String username;
     private String password;
 }
