@@ -14,7 +14,8 @@ import java.util.List;
 public class CategoryEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_seq")
+    @SequenceGenerator(name = "category_seq", sequenceName = "category_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -22,5 +23,5 @@ public class CategoryEntity {
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<PostEntity> postEntities;
+    private List<PostEntity> postEntity;
 }

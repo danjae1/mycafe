@@ -37,7 +37,7 @@ public class PostEntity {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private CategoryEntity categoryEntity;
+    private CategoryEntity category;
 
     @PrePersist
     public void prePersist() {

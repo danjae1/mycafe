@@ -15,7 +15,8 @@ import java.util.List;
 @Entity
 public class CommentEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comment_seq")
+    @SequenceGenerator(name = "comment_seq", sequenceName = "comment_seq", allocationSize = 1)
     private Long id;
 
     @Lob
@@ -30,13 +31,13 @@ public class CommentEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="parent_id")
     private CommentEntity parent;
 
-    @OneToMany(mappedBy = "comment",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent",fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<CommentEntity> replies;
+    private List<CommentEntity> children;
 
     @OneToMany(mappedBy = "comment",fetch = FetchType.LAZY)
     private List<CommentLikeEntity> likes;
@@ -47,7 +48,7 @@ public class CommentEntity {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private boolean delete = false;
+    private boolean deleted = false;
 
     @PrePersist
     public void prePersist(){
