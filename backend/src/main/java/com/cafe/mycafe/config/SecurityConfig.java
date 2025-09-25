@@ -35,7 +35,7 @@ public class SecurityConfig {
 	 */
 	@Bean //메소드에서 리턴되는 SecurityFilterChain 을 bean 으로 만들어준다.
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
-		String[] whiteList= {"/auth","/swagger-ui/**","/v3/api-docs/**","/api/login","/api/notice","/upload/**"};
+		String[] whiteList= {"/swagger-ui/**","/v3/api-docs/**","/api/notice","/upload/**"};
 
 		httpSecurity
 		.headers(header->
@@ -49,7 +49,8 @@ public class SecurityConfig {
 				.requestMatchers(whiteList).permitAll()
 				.requestMatchers("/admin/**").hasRole("ADMIN")
 				.requestMatchers("/staff/**").hasAnyRole("ADMIN", "STAFF")
-				.requestMatchers(HttpMethod.POST, "/api/user/**","/api/login").permitAll() //api 회원가입 요청은 받아들이도록
+				.requestMatchers("/login", "/api/user/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/notice", "/upload/**").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/user/**","/login","/post").permitAll() //api 회원가입 요청은 받아들이도록
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 				.requestMatchers(HttpMethod.GET,"/api/board","/api/board/**").permitAll()
 				.anyRequest().authenticated()

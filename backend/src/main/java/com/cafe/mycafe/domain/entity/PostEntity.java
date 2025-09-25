@@ -19,23 +19,24 @@ public class PostEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private String title;
-    private String author;
+    private String imageUrl;
 
     @Lob
     @Column(nullable = false)
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     @Column(nullable = false)
     private boolean deleted = false;
     private int viewCount = 0;
     private int likeCount = 0;
 
-    @ManyToOne
+    @ManyToOne(fetch =FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private CategoryEntity category;
 

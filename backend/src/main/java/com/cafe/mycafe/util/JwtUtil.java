@@ -66,11 +66,16 @@ public class JwtUtil {
 	 * userName과 추가 정보(Claims)를 전달하면 해당 정보를 token에 저장하고 
 	 * 만들어진 token문자열을 리턴하는 메서드 
 	 * */
-	public String generateToken(String username, Map<String, Object> extraClaims) {
+	public String generateAccessToken(String username, Map<String, Object> extraClaims) {
 		Map<String, Object> claims = new HashMap<>(extraClaims);
 		return createToken(claims, username);
 	}
-	
+
+	public String generateRefreshToken(String username, Map<String, Object> extraClaims) {
+		Map<String, Object> claims = new HashMap<>(extraClaims);
+		return createToken(claims, username);
+	}
+
 	private String createToken(Map<String, Object> claims, String subject) {
 		return Jwts.builder().setClaims(claims) // 추가 정보
 				.setSubject(subject) // 주요 정보(주로 userName)

@@ -28,7 +28,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    public final AuthenticationManager authManager;
+
 
     @PostMapping("/user")
     public ResponseEntity<UserSignUpRequestDto> signup(@RequestBody UserSignUpRequestDto dto){
