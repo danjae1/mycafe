@@ -2,6 +2,7 @@ package com.cafe.mycafe.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "post_likes")
 public class PostLikeEntity {
 
@@ -26,8 +28,11 @@ public class PostLikeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    private boolean likedByUser; // 로그인한 유저가 이미 추천했는지
-
     @Column(nullable = false)
     private LocalDateTime likedAt;
+
+    @PrePersist
+    public void prePersist(){
+        this.likedAt = LocalDateTime.now();
+    }
 }

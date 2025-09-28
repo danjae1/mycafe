@@ -3,6 +3,7 @@ package com.cafe.mycafe.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -18,10 +19,13 @@ public class CategoryEntity {
     @SequenceGenerator(name = "category_seq", sequenceName = "category_seq", allocationSize = 1)
     private Long id;
 
+    private String description;
+
+    private LocalDateTime createdAt;
+
     @Column(nullable = false, unique = true)
     private String name; // 예: "자유게시판", "질문게시판"
 
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    @ToString.Exclude
-    private List<PostEntity> postEntity;
+    private boolean deleted = false;
+
 }

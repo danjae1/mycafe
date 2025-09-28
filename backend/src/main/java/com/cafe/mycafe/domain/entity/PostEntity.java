@@ -18,8 +18,10 @@ public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+    private String writer;
     private String title;
     private String imageUrl;
+    private String thumbnailUrl;
 
     @Lob
     @Column(nullable = false)
@@ -30,6 +32,8 @@ public class PostEntity {
     @Column(nullable = false)
     private boolean deleted = false;
     private int viewCount = 0;
+
+    @Column(nullable = false)
     private int likeCount = 0;
 
     @ManyToOne(fetch =FetchType.LAZY)
@@ -50,4 +54,15 @@ public class PostEntity {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void increaseLikeCount() {
+        this.likeCount += 1;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0 ){
+            this.likeCount -= 1;
+        }
+    }
+
 }

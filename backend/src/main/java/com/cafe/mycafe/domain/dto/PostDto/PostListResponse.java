@@ -1,10 +1,12 @@
 package com.cafe.mycafe.domain.dto.PostDto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @NoArgsConstructor
@@ -12,15 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 public class PostListResponse {
-    private List<PostDto> list;
-
-    private int startPageNum;
-    private int endPageNum;
-    private int totalPageCount;
-    private int pageNum;
-    private int totalRow;
-
-    private String keyword; // 검색 키워드
-    private String search; //검색 조건
-    private String query; // GET방식 파라미터 "search=xxx&keyword=xxx" or "";
+    // 게시글 목록 응답
+    private List<PostListItemDto> list; // 게시글 목록
+    private PageResponse page;          // 페이징 + 검색 정보
 }

@@ -14,6 +14,6 @@ public class PostRequestDto {
     
     private String title;
     private String content;
-
+    private Long categoryId;
     //작성자는 jwt에서 뺴서 쓸 수 있음
 }
