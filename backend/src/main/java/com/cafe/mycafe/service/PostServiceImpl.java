@@ -1,13 +1,12 @@
 package com.cafe.mycafe.service;
 
+import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
 import com.cafe.mycafe.domain.dto.PostDto.*;
 import com.cafe.mycafe.domain.entity.CategoryEntity;
+import com.cafe.mycafe.domain.entity.CommentEntity;
 import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.domain.entity.UserEntity;
-import com.cafe.mycafe.repository.CategoryRepository;
-import com.cafe.mycafe.repository.PostLikeRepository;
-import com.cafe.mycafe.repository.PostRepository;
-import com.cafe.mycafe.repository.UserRepository;
+import com.cafe.mycafe.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +27,9 @@ public class PostServiceImpl implements PostService{
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-
+    private final CommentRepository commentRepository;
+    private final CommentLikeService commentLikeService;
+    
     @Transactional
     @Override
     public PostResponseDto createPost(Long userId, PostRequestDto dto, MultipartFile image) {
@@ -114,8 +116,60 @@ public class PostServiceImpl implements PostService{
     
     //단일 게시물 조회
     @Override
-    public PostListResponse getPostById(Long postId, Long currentUserId) {
-        return null;
+    public PostResponseDto getPostById(Long postId, Long userId) {
+
+        PostEntity post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        Long likeCount = postLikeRepository.countByPostId(postId);
+        boolean likedByMe = postLikeRepository.existsByPostAndUser(post, user);
+        
+        //댓글 목록 조회
+        List<CommentEntity> commentEntities = commentRepository.findByPostEntity(post);
+
+        List<Long> commentIds = commentEntities.stream()
+                .map(CommentEntity :: getId)
+                .toList();
+        
+        // 댓글 좋아요 갯수 한번에 조회
+        Map<Long, Integer> likeCountMap = commentLikeService.getLikeCountForComments(commentIds);
+
+        //유저가 좋아요 누른 댓글들 한 번에 조회
+        List<Long> likedCommentIds = commentLikeService.getLikedCommentIdsByUser(userId);
+
+        // 댓글 DTO로 변환하기
+        List<CommentResponseDto> comments = commentEntities.stream()
+                .map(c -> CommentResponseDto.builder()
+                        .id(c.getId())
+                        .content(c.getContent())
+                        .userName(c.getUser().getUsername())
+                        .createdAt(c.getCreatedAt())
+                        .updatedAt(c.getUpdatedAt())
+                        .deleted(c.isDeleted())
+                        .likeCount(likeCountMap.getOrDefault(c.getId(), 0))
+                        .likedByMe(likedCommentIds.contains(c.getId()))
+                        .children(List.of()) // 대댓글 있으면 매핑
+                        .build())
+                .toList();
+
+        // 최종 DTO를 반환하기
+        return PostResponseDto.builder()
+                .id(post.getId())
+                .writer(post.getUser().getUsername())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .categoryId(post.getCategory().getId())
+                .categoryName(post.getCategory().getName())
+                .viewCount(post.getViewCount())
+                .likeCount(likeCount)
+                .likedByUser(likedByMe)
+                .imageUrl(post.getImageUrl())
+                .thumbnailUrl(post.getThumbnailUrl())
+                .createdAt(post.getCreatedAt())
+                .build();
     }
     
     //전체 게시글 조회
@@ -175,4 +229,29 @@ public class PostServiceImpl implements PostService{
                 .page(pageResponse)
                 .build();
 }
+
+    @Override
+    public List<PostListItemDto> getPostSummariesByUserId(Long targetUserId, Long userId) {
+
+        //targetUserId => 조회할 글 작성자
+        //userId => 로그인한 사용자 (컨트롤러에서 PreAuthorize로 검증하지만, 후에 등급별 특수유저별 기능 추가 하기위해 파라미터 추가)
+        List<PostEntity> posts = postRepository.findAllByAuthorIdOrderByCreatedAtDesc(targetUserId);
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));
+
+        return posts.stream()
+                .map(post -> PostListItemDto.builder()
+                        .id(post.getId())
+                        .writer(post.getWriter())
+                        .title(post.getTitle())
+                        .likeCount(post.getLikeCount()) // n+1문제 파히기위해 db에서 바로 카운트
+                        .likedByUser(userId != null && postLikeRepository.existsByPostAndUser(post,user))
+                        .thumbnailUrl(post.getThumbnailUrl())
+                        .categoryName(post.getCategory().getName())
+                        .createdAt(post.getCreatedAt())
+                        .build())
+
+                .collect(Collectors.toList());
+    }
 }

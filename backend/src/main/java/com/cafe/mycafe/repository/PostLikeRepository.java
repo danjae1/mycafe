@@ -16,8 +16,7 @@ public interface PostLikeRepository extends JpaRepository<PostLikeEntity, Long> 
     // 하지만 좋아요 취소해야할 때 postLikeEntity가 필요해서
     // findbypostanduser를 또 호출해야하기 때문에 삭제할 엔티티도 얻을 수 있게 만든다.
     //게시글 조회할 때 조회용
-    boolean existsByPostAndUser(PostEntity post, UserEntity user); 
-
+    boolean existsByPostAndUser(PostEntity post, UserEntity user);
 
     //좋아요가 이미 존재하는지 확인할 때 사용
     // 좋아요 취소할 때 엔티티가 필요하기 떄문에 필요함
@@ -25,4 +24,6 @@ public interface PostLikeRepository extends JpaRepository<PostLikeEntity, Long> 
 
     @Query("SELECT pl FROM PostLikeEntity pl JOIN pl.post p WHERE p.user.id = :userId")
     List<PostLikeEntity> findAllByUserId(@Param("userId") Long userId);
+
+    Long countByPostId(Long postId);
 }

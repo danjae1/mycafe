@@ -31,7 +31,7 @@ public class PostEntity {
 
     @Column(nullable = false)
     private boolean deleted = false;
-    private int viewCount = 0;
+    private Long viewCount;
 
     @Column(nullable = false)
     private int likeCount = 0;

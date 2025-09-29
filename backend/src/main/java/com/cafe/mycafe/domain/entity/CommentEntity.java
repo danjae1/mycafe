@@ -23,13 +23,16 @@ public class CommentEntity {
     @Column(nullable = false)
     private String content;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="post_id",nullable = false)
-    private PostEntity postEntity;
+    private PostEntity post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @Column(nullable = false)
+    private int likeCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="parent_id")
@@ -38,9 +41,6 @@ public class CommentEntity {
     @OneToMany(mappedBy = "parent",fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<CommentEntity> children;
-
-    @OneToMany(mappedBy = "comment",fetch = FetchType.LAZY)
-    private List<CommentLikeEntity> likes;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -60,4 +60,9 @@ public class CommentEntity {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void increaseLikeCount() { this.likeCount++; }
+    public void decreaseLikeCount() { this.likeCount--; }
+
+
 }
