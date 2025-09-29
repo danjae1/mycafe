@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class CommentController {
 
     // 마이페이지에서 내가 쓴 댓글 목록 조회
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CommentListItemDto>> getMyComments(@AuthenticationPrincipal CustomUserDetails userDetails){
 
         Long userId = userDetails.getId();
@@ -43,6 +45,7 @@ public class CommentController {
 
     // 다른 유저가 쓴 댓글 목록 조회
     @GetMapping("/user/{targetUserId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CommentListItemDto>> getCommentsByUser(@PathVariable Long targetUserId,
                                                                       @AuthenticationPrincipal CustomUserDetails userDetails){
         Long userId = userDetails.getId();
