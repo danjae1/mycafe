@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-    List<CommentEntity> findByPostEntity(PostEntity postEntity);  // 게시글 댓글 조회
+    List<CommentEntity> findByPost(PostEntity post);  // 게시글 댓글 조회
     List<CommentEntity> findByParent(CommentEntity parent); // 대댓글 조회
     
     //게시글 Id로 삭제되지 않은 댓글 전체 조회하기

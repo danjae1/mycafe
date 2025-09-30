@@ -36,7 +36,7 @@ public class CommentLikeController {
     }
 
     //타 유저가 좋아요 누른 댓글 목록 가져오기
-    @GetMapping("/comments/liked")
+    @GetMapping("/comments/liked/{userId}")
     public ResponseEntity<List<Long>> getLikedCommentsByUser(@PathVariable Long userId) {
         List<Long> likedCommentIds = commentLikeService.getLikedCommentIdsByUser(userId);
 
@@ -44,7 +44,7 @@ public class CommentLikeController {
     }
 
     //마이페지이용 내가 좋아요 누른 댓글 목록 가져오기
-    @GetMapping("/comments/liked")
+    @GetMapping("/comments/liked/me")
     public ResponseEntity<List<Long>> getLikedCommentsByMe(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getId();

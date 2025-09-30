@@ -2,12 +2,10 @@ package com.cafe.mycafe.service;
 
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
 import com.cafe.mycafe.domain.dto.PostDto.*;
-import com.cafe.mycafe.domain.entity.CategoryEntity;
-import com.cafe.mycafe.domain.entity.CommentEntity;
-import com.cafe.mycafe.domain.entity.PostEntity;
-import com.cafe.mycafe.domain.entity.UserEntity;
+import com.cafe.mycafe.domain.entity.*;
 import com.cafe.mycafe.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,7 +27,8 @@ public class PostServiceImpl implements PostService{
     private final CategoryRepository categoryRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeService commentLikeService;
-    
+    private final PostViewRepository postViewRepository;
+
     @Transactional
     @Override
     public PostResponseDto createPost(Long userId, PostRequestDto dto, MultipartFile image) {
@@ -116,6 +115,7 @@ public class PostServiceImpl implements PostService{
     
     //단일 게시물 조회
     @Override
+    @Transactional
     public PostResponseDto getPostById(Long postId, Long userId) {
 
         PostEntity post = postRepository.findById(postId)
@@ -123,12 +123,28 @@ public class PostServiceImpl implements PostService{
 
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        
+        //TTL 1시간 부여하기
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+        
+        //1시간 내 조회기록 없으면 카운트 증가
+        if (!postViewRepository.existsByPostAndUserAndViewedAtAfter(post,user,oneHourAgo)){
+            PostViewEntity view = PostViewEntity.builder()
+                    .post(post)
+                    .user(user)
+                    .viewedAt(LocalDateTime.now())
+                    .build();
+
+            postViewRepository.save(view);
+
+            post.setViewCount(post.getViewCount() + 1);
+        }
 
         Long likeCount = postLikeRepository.countByPostId(postId);
         boolean likedByMe = postLikeRepository.existsByPostAndUser(post, user);
-        
+
         //댓글 목록 조회
-        List<CommentEntity> commentEntities = commentRepository.findByPostEntity(post);
+        List<CommentEntity> commentEntities = commentRepository.findByPost(post);
 
         List<Long> commentIds = commentEntities.stream()
                 .map(CommentEntity :: getId)
@@ -235,7 +251,7 @@ public class PostServiceImpl implements PostService{
 
         //targetUserId => 조회할 글 작성자
         //userId => 로그인한 사용자 (컨트롤러에서 PreAuthorize로 검증하지만, 후에 등급별 특수유저별 기능 추가 하기위해 파라미터 추가)
-        List<PostEntity> posts = postRepository.findAllByAuthorIdOrderByCreatedAtDesc(targetUserId);
+        List<PostEntity> posts = postRepository.findAllByUser_IdOrderByCreatedAtDesc(targetUserId);
 
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));

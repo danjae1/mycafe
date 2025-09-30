@@ -17,7 +17,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findAllByDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
 
     //유저가 쓴 글 목록 조회
-    List<PostEntity> findAllByAuthorIdOrderByCreatedAtDesc(Long userId);
+    List<PostEntity> findAllByUser_IdOrderByCreatedAtDesc(Long userId);
     
     // 삭제 처리 안 된 모든 글 수
     int countAllByDeletedFalse();

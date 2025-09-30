@@ -16,6 +16,7 @@ public class CategoryResponseDto {
 
     private Long id;
     private String name;
+    private String path;
     private String description;
     private LocalDateTime createdAt;
 }

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-@RequestMapping("/api")
+@RequestMapping
 @RequiredArgsConstructor
 @RestController
 public class UserController {
@@ -30,7 +30,7 @@ public class UserController {
     private final JwtUtil jwtUtil;
 
 
-    @PostMapping("/user")
+    @PostMapping("/signup")
     public ResponseEntity<UserSignUpRequestDto> signup(@RequestBody UserSignUpRequestDto dto){
         userService.signUp(dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();

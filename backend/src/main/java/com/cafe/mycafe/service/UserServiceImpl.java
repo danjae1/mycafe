@@ -19,13 +19,15 @@ public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+
+
     @Transactional
     @Override
     public void signUp(UserSignUpRequestDto dto){
 
         //비밀번호 암호화하기
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
-        
+
         // DTO를 Entity 객체로 변환하고 기본값 넣기
         UserEntity user = UserEntity.builder()
                 .username(dto.getUsername())

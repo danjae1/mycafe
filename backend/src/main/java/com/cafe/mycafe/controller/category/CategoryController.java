@@ -20,7 +20,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @GetMapping
+    @GetMapping("/categories")
     public ResponseEntity<CategoryListResponseDto> getAllCategories(){
         CategoryListResponseDto categories = categoryService.getAllCategories();
 
@@ -39,7 +39,7 @@ public class CategoryController {
     }
     
     //카테고리명 수정 관리자만 가능
-    @PatchMapping("{/id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN'")
     public ResponseEntity<CategoryResponseDto> updateCategory(
             @PathVariable Long id,

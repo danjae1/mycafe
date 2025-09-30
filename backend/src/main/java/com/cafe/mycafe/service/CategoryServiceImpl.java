@@ -29,6 +29,7 @@ public class CategoryServiceImpl implements CategoryService{
         List<CategoryResponseDto> dtoList = categories.stream()
                 .map(category -> CategoryResponseDto.builder()
                         .id(category.getId())
+                        .path(category.getPath())
                         .name(category.getName())
                         .description(category.getDescription())
                         .createdAt(category.getCreatedAt())

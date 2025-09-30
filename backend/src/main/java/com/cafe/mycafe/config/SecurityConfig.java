@@ -50,9 +50,9 @@ public class SecurityConfig {
 				.requestMatchers("/admin/**").hasRole("ADMIN")
 				.requestMatchers("/staff/**").hasAnyRole("ADMIN", "STAFF")
 				.requestMatchers("/login", "/api/user/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/notice", "/upload/**").permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/user/**","/login","/post").permitAll() //api 회원가입 요청은 받아들이도록
+				.requestMatchers(HttpMethod.POST, "/signup","/api/signup","/api/**","/api/user/**","/login","/post").permitAll() //api 회원가입 요청은 받아들이도록
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-				.requestMatchers(HttpMethod.GET,"/api/board","/api/board/**").permitAll()
+				.requestMatchers(HttpMethod.GET,"/categories","/api/**","/api/board","/api/board/**").permitAll()
 				.anyRequest().authenticated()
 		)
 		.sessionManagement(config ->
@@ -82,7 +82,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(List.of("http://localhost:9000"));
+		configuration.setAllowedOriginPatterns(List.of("http://localhost:9000","http://localhost:5173"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true); // 쿠키/Authorization 헤더 허용
