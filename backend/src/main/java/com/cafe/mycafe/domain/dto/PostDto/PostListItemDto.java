@@ -19,6 +19,7 @@ public class PostListItemDto {
     private Long id;
     private String writer;
     private String title;
+    private int viewCount;
     private int likeCount;
     private boolean likedByUser;
     private String thumbnailUrl;

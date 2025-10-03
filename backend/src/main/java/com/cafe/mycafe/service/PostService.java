@@ -19,7 +19,7 @@ public interface PostService {
     //단일 게시글 id로 가져오기
     public PostResponseDto getPostById(Long postId, Long currentUserId);
     //게시글 목록 불러오기
-    public PostListResponse getPosts(String categoryName, String keyword,
+    public PostListResponse getPostsByPath(String categoryPath, String keyword,
                                      int pageNum, int pageSize, Long currentUserId);
 
     //마이페이지/ 타 유저 프로필에서 쓴 글 목록 가져오기

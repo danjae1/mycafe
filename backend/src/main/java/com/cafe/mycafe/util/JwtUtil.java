@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,19 +18,19 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.spec.SecretKeySpec;
 
-/*
- * JwtUtil 클래스가 동작하기 위해 pom.xml에 아래의 dependency를 추가해야한다.
- * */
 
 @Component
 public class JwtUtil {
+
+	private final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 	/*
-	 * custom.properties 파일을 만들고 해당 파일에 
+	 * custom.properties 파일을 만들고 해당 파일에
 	 * jwt.secret 라는 키 값으로 토큰을 발급 할 때 서명할 key를 설정했는데 그 문자열을 읽어와야 한다.
 	 * */
+
 	@Value("${jwt.secret}")
 	private String secretKey;
-	
+
 	//jwt.expiration 라는 키 값으로 토큰의 유효기간을 설정했는데 해당 숫자를 읽어와서 사용한다.
 	@Value("${jwt.expiration}")
 	private long expiration;
@@ -61,10 +63,11 @@ public class JwtUtil {
 
 	private Boolean isTokenExpired(String token) {
 		return extractExpiration(token).before(new Date());
-	} 
+	}
+
 	/*
-	 * userName과 추가 정보(Claims)를 전달하면 해당 정보를 token에 저장하고 
-	 * 만들어진 token문자열을 리턴하는 메서드 
+	 * userName과 추가 정보(Claims)를 전달하면 해당 정보를 token에 저장하고
+	 * 만들어진 token문자열을 리턴하는 메서드
 	 * */
 	public String generateAccessToken(String username, Map<String, Object> extraClaims) {
 		Map<String, Object> claims = new HashMap<>(extraClaims);
@@ -95,5 +98,18 @@ public class JwtUtil {
 		boolean isValid = !isTokenExpired(token) && "your-issuer".equals(claims.getIssuer());
 		// 유효성 여부를 리턴한다.
 		return isValid;
+	}
+
+
+	// Refresh Token 꺼내오기
+	public String resolveRefreshToken(HttpServletRequest request) {
+		if (request.getCookies() == null) return null;
+
+		for (Cookie cookie : request.getCookies()) {
+			if (REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+				return cookie.getValue();
+			}
+		}
+		return null;
 	}
 }

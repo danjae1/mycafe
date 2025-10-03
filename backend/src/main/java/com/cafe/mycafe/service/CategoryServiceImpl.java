@@ -19,8 +19,8 @@ public class CategoryServiceImpl implements CategoryService{
 
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
-    
-    
+
+
     //카테고리 목록 조회
     @Override
     public CategoryListResponseDto getAllCategories() {
@@ -91,7 +91,7 @@ public class CategoryServiceImpl implements CategoryService{
 
         //Category에 post엔티티 매핑을 하면 메모리 낭비가 심하기 때문에 post -> category 단방향 매핑만 하고
         //count로 해당 카테고리에 글이 있는지 숫자로 판단하기
-        int postCount = postRepository.countByCategory(category);
+        int postCount = postRepository.countByCategoryAndDeletedFalse(category);
         if(postCount > 0 ) {
             throw new RuntimeException("연관 게시글이 존재하여 삭제할 수 없습니다." +
                     "해당 카테고리의 글을 모두 지워주세요.");

@@ -1,13 +1,17 @@
 package com.cafe.mycafe.service;
 
+import com.cafe.mycafe.controller.exceptioncontroller.CategoryNotFoundException;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
 import com.cafe.mycafe.domain.dto.PostDto.*;
 import com.cafe.mycafe.domain.entity.*;
 import com.cafe.mycafe.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cglib.core.Local;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -121,23 +125,30 @@ public class PostServiceImpl implements PostService{
         PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-        
+        UserEntity user = null;
+        if (userId != null) {
+            user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        }
         //TTL 1시간 부여하기
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
         
         //1시간 내 조회기록 없으면 카운트 증가
-        if (!postViewRepository.existsByPostAndUserAndViewedAtAfter(post,user,oneHourAgo)){
+        if (!postViewRepository.existsRecentView(postId,userId,oneHourAgo)){
             PostViewEntity view = PostViewEntity.builder()
                     .post(post)
                     .user(user)
                     .viewedAt(LocalDateTime.now())
                     .build();
-
-            postViewRepository.save(view);
-
-            post.setViewCount(post.getViewCount() + 1);
+            
+            // 조회수 중복방지 했더니 동시성 문제 생김 그래서 db단에서 무시할 수 있도록 변경
+            try {
+                postViewRepository.save(view); // DB unique constraint로 안전하게 중복 방지
+                post.setViewCount(post.getViewCount() + 1);
+            } catch (DataIntegrityViolationException e) {
+                // 이미 존재하면 무시
+                System.out.println("이미 조회 기록이 존재합니다.");
+            }
         }
 
         Long likeCount = postLikeRepository.countByPostId(postId);
@@ -190,21 +201,26 @@ public class PostServiceImpl implements PostService{
     
     //전체 게시글 조회
     @Override
-    public PostListResponse getPosts(String categoryName, String keyword, int pageNum, int pageSize, Long currentUserId) {
+    public PostListResponse getPostsByPath(String categoryPath, String keyword, int pageNum, int pageSize, Long currentUserId) {
 
-        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        int startRow = (pageNum - 1) * pageSize + 1;  // Oracle ROW_NUMBER 시작은 1부터
+        int endRow = pageNum * pageSize;
+
         List<PostEntity> posts;
         int totalRow;
 
-        if (categoryName == null || categoryName.isEmpty()) {
-            posts = postRepository.findAllByDeletedFalseOrderByCreatedAtDesc(pageable);
+        if (categoryPath == null || categoryPath.isEmpty()) {
+            posts = postRepository.findPostsWithPaging(startRow, endRow);
             totalRow = postRepository.countAllByDeletedFalse();
         } else {
-            CategoryEntity category = categoryRepository.findByNameAndDeletedFalse(categoryName)
-                    .orElseThrow(() -> new RuntimeException("카테고리가 없어요"));
 
-            posts = postRepository.findAllByCategoryAndDeletedFalseOrderByCreatedAtDesc(category, pageable);
-            totalRow = postRepository.countByCategory(category);
+            String path = categoryPath.startsWith("/") ? categoryPath : "/" + categoryPath;
+            CategoryEntity category = categoryRepository.findByPathAndDeletedFalse(path)
+                    .orElseThrow(() -> new CategoryNotFoundException("카테고리가 없습니다: " + path));
+
+
+            posts = postRepository.findByCategoryWithPaging(category.getId(), startRow, endRow);
+            totalRow = postRepository.countByCategoryNative(category.getId());
         }
 
         List<PostListItemDto> items = posts.stream().map(post -> {
@@ -241,10 +257,12 @@ public class PostServiceImpl implements PostService{
                 .build();
 
         return PostListResponse.builder()
-                .list(items)
+                .posts(items)
                 .page(pageResponse)
                 .build();
-}
+    }
+
+
 
     @Override
     public List<PostListItemDto> getPostSummariesByUserId(Long targetUserId, Long userId) {

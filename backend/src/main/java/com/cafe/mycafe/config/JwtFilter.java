@@ -42,14 +42,17 @@ public class JwtFilter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 
 		String authHeader = request.getHeader("Authorization");
+		System.out.println("Authorization header : " + authHeader);
+		System.out.println("Authorization header : " + authHeader);
+		System.out.println("Authorization header : " + authHeader);
 		String jwtToken = null;
 		String userName = null;
 
 		if (authHeader != null && authHeader.startsWith("Bearer ")) {
 			// "Bearer " 제거
-			jwtToken = authHeader.substring(7);
-			// URL 디코딩
-			jwtToken = URLDecoder.decode(jwtToken, StandardCharsets.UTF_8);
+			jwtToken = authHeader.substring(7).replaceAll("\\s+", "");;
+//			// URL 디코딩
+//			jwtToken = URLDecoder.decode(jwtToken, StandardCharsets.UTF_8);
 
 			// 토큰에서 username 추출
 			userName = jwtUtil.extractUsername(jwtToken);

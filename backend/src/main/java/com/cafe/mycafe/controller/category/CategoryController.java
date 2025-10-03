@@ -39,8 +39,8 @@ public class CategoryController {
     }
     
     //카테고리명 수정 관리자만 가능
-    @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN'")
+    @PatchMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponseDto> updateCategory(
             @PathVariable Long id,
             @RequestBody CategoryRequestDto requestDto){
@@ -51,7 +51,7 @@ public class CategoryController {
     }
 
     //카테고리 삭제 관리자만 가능
-    @DeleteMapping("/{id}")
+    @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
 

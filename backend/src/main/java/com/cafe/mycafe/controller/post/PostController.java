@@ -1,6 +1,7 @@
 package com.cafe.mycafe.controller.post;
 
 
+import com.cafe.mycafe.controller.exceptioncontroller.CategoryNotFoundException;
 import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListResponse;
 import com.cafe.mycafe.domain.dto.PostDto.PostRequestDto;
@@ -11,21 +12,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping
 @RequiredArgsConstructor
 public class PostController {
 
     private final PostService postService;
     
     //마이페이지 내가 쓴 글 목록 불러오기
-    @GetMapping("/posts")
+    @GetMapping("/posts/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<PostListItemDto>> getMyPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -39,7 +40,7 @@ public class PostController {
     }
 
     //타유저 프로필에서 해당 유저가 쓴 글 목록 불러오기
-    @GetMapping("/{targetUserId}/posts")
+    @GetMapping("/users/{targetUserId}/posts")
     public ResponseEntity<List<PostListItemDto>> getUserPosts(@PathVariable Long targetUserId,
                                                               @AuthenticationPrincipal CustomUserDetails userDetails){
         //targetUserId => 내가 보려고 하는 유저의 ID
@@ -52,27 +53,39 @@ public class PostController {
     }
 
     //전체 게시글 조회
-    @GetMapping
-    public PostListResponse getPosts(
-            @RequestParam(required = false) String categoryName,
+    @GetMapping("/posts")
+    public ResponseEntity<?> getPosts(
+            @RequestParam(required = false) String categoryPath,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) Long currentUserId
     ) {
-        return postService.getPosts(categoryName, keyword, pageNum, pageSize, currentUserId);
+        try {
+            PostListResponse response = postService.getPostsByPath(categoryPath, keyword, pageNum, pageSize, currentUserId);
+            return ResponseEntity.ok(response);
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "서버 오류 발생"));
+        }
     }
 
-    //단일 게시글 조회
-    @GetMapping("/{postId}")
-    ResponseEntity<PostResponseDto> getPostById(@PathVariable Long postId,
-                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = (userDetails != null) ? userDetails.getId() : null;
 
-        PostResponseDto response = postService.getPostById(postId, userId);
+        //단일 게시글 조회
+        @GetMapping("/{categoryPath}/posts/{postId}")
+        ResponseEntity<PostResponseDto> getPostById(@PathVariable Long postId,
+                                                    @PathVariable String categoryPath,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+            Long userId = (userDetails != null) ? userDetails.getId() : null;
 
-        return ResponseEntity.ok(response);
-    }
+            PostResponseDto response = postService.getPostById(postId, userId);
+
+            return ResponseEntity.ok(response);
+        }
 
     //게시글 등록
     @PostMapping("/post")

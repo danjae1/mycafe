@@ -1,5 +1,6 @@
 package com.cafe.mycafe.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,17 +45,29 @@ public class SecurityConfig {
 		)
 		.csrf(csrf->csrf.disable())
 		.cors(cors ->cors.configurationSource(corsConfigurationSource()))
+		.logout(logout -> logout
+						.logoutUrl("/logout") // POST /logout
+						.logoutSuccessHandler((request, response, authentication) -> {
+							// SPA용: 리디렉션 없이 200 OK 반환
+							response.setStatus(HttpServletResponse.SC_OK);
+						})
+						.permitAll()
+				)
 		.authorizeHttpRequests(config ->
 			config
 				.requestMatchers(whiteList).permitAll()
 				.requestMatchers("/admin/**").hasRole("ADMIN")
 				.requestMatchers("/staff/**").hasAnyRole("ADMIN", "STAFF")
-				.requestMatchers("/login", "/api/user/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/notice", "/upload/**").permitAll()
-				.requestMatchers(HttpMethod.POST, "/signup","/api/signup","/api/**","/api/user/**","/login","/post").permitAll() //api 회원가입 요청은 받아들이도록
+				.requestMatchers("/**","/login", "/api/user/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/notice", "/upload/**").permitAll()
+				.requestMatchers(HttpMethod.POST,"/*/posts/**", "/signup","/api/signup","/api/**","/api/user/**","/login","/logout","/post").permitAll() //api 회원가입 요청은 받아들이도록
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-				.requestMatchers(HttpMethod.GET,"/categories","/api/**","/api/board","/api/board/**").permitAll()
-				.anyRequest().authenticated()
+				.requestMatchers(HttpMethod.GET,"/*/posts/**","/check","/categories","/api/**","/api/board","/api/board/**").permitAll()
+
 		)
+		.authorizeHttpRequests(auth -> auth
+							.requestMatchers("/*/posts/**").authenticated()
+							.anyRequest().permitAll()
+				)
 		.sessionManagement(config ->
 			//세션을 사용하지 않도록 설정한다.
 			config.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -82,10 +95,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(List.of("http://localhost:9000","http://localhost:5173"));
+		configuration.setAllowedOrigins(List.of("http://localhost:5173")); // React dev 서버
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(List.of("*"));
-		configuration.setAllowCredentials(true); // 쿠키/Authorization 헤더 허용
+		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+		configuration.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);

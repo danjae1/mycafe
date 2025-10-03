@@ -55,7 +55,7 @@ public class CommentController {
     }
 
     //게시글 조회시 댓글 목록 같이 불러오기
-    @GetMapping("/post/{postId}/comments")
+    @GetMapping("/{categoryPath}/posts/{postId}/comments")
     public ResponseEntity<List<CommentResponseDto>> getCommentsByPost(
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails){
@@ -65,8 +65,9 @@ public class CommentController {
 
     }
     //댓글 작성하기
-    @PostMapping("/posts/{postId}/comments")
+    @PostMapping("/{categoryPath}/posts/{postId}/comments")
     public ResponseEntity<CommentResponseDto> createComment(
+            @PathVariable String categoryPath,
             @PathVariable Long postId,
             @RequestBody CommentRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails){

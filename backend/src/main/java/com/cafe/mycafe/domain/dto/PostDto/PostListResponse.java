@@ -15,6 +15,6 @@ import java.util.List;
 @Data
 public class PostListResponse {
     // 게시글 목록 응답
-    private List<PostListItemDto> list; // 게시글 목록
+    private List<PostListItemDto> posts; // 게시글 목록
     private PageResponse page;          // 페이징 + 검색 정보
 }

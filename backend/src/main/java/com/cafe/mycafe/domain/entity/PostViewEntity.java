@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "post_views", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"post_id", "user_id"})
-})
+@Table(name = "post_views"
+//        ,uniqueConstraints = {@UniqueConstraint(columnNames = {"post_id", "user_id"})}
+)
 public class PostViewEntity {
 
     @Id
