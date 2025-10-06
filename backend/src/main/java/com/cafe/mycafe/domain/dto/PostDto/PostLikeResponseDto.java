@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PostLikeResponseDto {
     private boolean liked;   // 사용자가 지금 눌렀는지
-    private int likeCount;   // 현재 총 좋아요 수
+    private Long likeCount;   // 현재 총 좋아요 수
 }

@@ -35,9 +35,9 @@ public class PostEntity {
     private Long viewCount = 0L;
 
     @Column(nullable = false)
-    private int likeCount = 0;
+    private Long likeCount = 0L;
 
-    @ManyToOne(fetch =FetchType.LAZY)
+    @ManyToOne(fetch =FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private UserEntity user;
 

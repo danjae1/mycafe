@@ -12,9 +12,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,6 +59,8 @@ public class PostServiceImpl implements PostService{
                 .content(dto.getContent())
                 .user(user)
                 .imageUrl(imageUrl)
+                .viewCount(0L)
+                .likeCount(0L)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -64,6 +69,7 @@ public class PostServiceImpl implements PostService{
         return PostResponseDto.builder()
                 .id(entity.getId())
                 .categoryId(entity.getCategory().getId())
+                .userId(entity.getUser().getId())
                 .title(entity.getTitle())
                 .content(entity.getContent())
                 .writer(entity.getUser().getUsername())
@@ -97,7 +103,7 @@ public class PostServiceImpl implements PostService{
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리 입니다."));
 
         if (!post.getUser().getId().equals(userId)){
-            throw new RuntimeException("본인이 작성한 글만 수정할 수 있습니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 글만 수정할 수 있습니다.");
         }
 
         if(dto.getCategoryId() != null) post.setCategory(category);
@@ -107,6 +113,7 @@ public class PostServiceImpl implements PostService{
 
         return PostResponseDto.builder()
                 .id(post.getId())
+                .userId(post.getUser().getId())
                 .categoryId(post.getCategory().getId())
                 .title(post.getTitle())
                 .content(post.getContent())
@@ -120,7 +127,7 @@ public class PostServiceImpl implements PostService{
     //단일 게시물 조회
     @Override
     @Transactional
-    public PostResponseDto getPostById(Long postId, Long userId) {
+    public PostResponseDto getPostById(@PathVariable  Long postId, Long userId) {
 
         PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
@@ -185,6 +192,7 @@ public class PostServiceImpl implements PostService{
         // 최종 DTO를 반환하기
         return PostResponseDto.builder()
                 .id(post.getId())
+                .userId(post.getUser().getId())
                 .writer(post.getUser().getUsername())
                 .title(post.getTitle())
                 .content(post.getContent())

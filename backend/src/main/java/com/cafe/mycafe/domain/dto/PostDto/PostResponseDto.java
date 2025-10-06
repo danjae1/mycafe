@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class PostResponseDto {
     //단일 게시글 반환
     private Long id; //게시글 고유번호
+    private Long userId; // 작성자 PK
     private String writer;      // 서버에서 넣어주는 작성자
     private String title; //제목
     private String content; //본문
