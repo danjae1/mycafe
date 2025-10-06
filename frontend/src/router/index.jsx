@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
 import PostList from "../components/PostList";
 import PostDetail from "../components/PostDetail";
+import PostWrite from "../components/PostWrite";
+import PostEdit from "../components/PostEdit";
 
 
 export default function AppRouter({setShowBanner}) {
@@ -13,7 +15,8 @@ export default function AppRouter({setShowBanner}) {
       <Route path="/:categoryPath" element={<PostList setShowBanner={setShowBanner} />} />
 
       <Route path="/:categoryPath/posts/:postId" element={<PostDetail setShowBanner={setShowBanner} />} />
-
+     <Route path="/write" element={<PostWrite />} />
+     <Route path="/:categoryPath/posts/:postId/edit" element={<PostEdit />} />
     </Routes>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import jwt_decode from "jwt-decode";
 import api from "../api/api";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
@@ -13,15 +14,26 @@ export default function PostDetail({ setShowBanner }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 토큰에서 로그인한 유저 정보 가져오기
   const token = localStorage.getItem("accessToken");
-
+  console.log(token);
+  let currentUser = null;
+  if (token) {
+    const decoded = jwt_decode(token);
+    currentUser = { id: decoded.userId, username: decoded.username }; // payload 구조에 맞게 조정
+    console.log(currentUser)
+  }
+  
   useEffect(() => {
     setShowBanner(false);
     setLoading(true);
 
     // 글 상세 API 호출
     api.get(`/${categoryPath}/posts/${postId}`)
-      .then(res => setPost(res.data))
+      .then(res => 
+        {setPost(res.data)
+        console.log(res)
+        console.log(res.data)})
       .catch(err => setError(err.response?.data?.error || "글 조회 실패"));
 
     // 댓글/대댓글 API 호출
@@ -41,6 +53,21 @@ export default function PostDetail({ setShowBanner }) {
     setComments(prev => [...prev, newComment]);
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("게시글이 삭제되었습니다.");
+      navigate(-1);
+    } catch (err) {
+      console.error(err);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+  console.log("currentUser", currentUser); 
+  console.log("post.userId", post.userId);
   return (
     <div style={{ padding: 20 }}>
       <button onClick={() => navigate(-1)} style={{ marginBottom: 12 }}>◀ 뒤로</button>
@@ -54,6 +81,19 @@ export default function PostDetail({ setShowBanner }) {
         조회수: {post.viewCount ?? 0} &nbsp; 추천: {post.likeCount ?? 0}
       </div>
 
+      {/* 작성자이면 수정/삭제 버튼 표시 */}
+      {currentUser?.id === post.userId && (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            onClick={() => navigate(`/${categoryPath}/posts/${postId}/edit`)}
+            style={{ marginRight: 8 }}
+          >
+            수정
+          </button>
+          <button onClick={handleDelete}>삭제</button>
+        </div>
+      )}
+
       <hr />
 
       <div style={{ marginTop: 12 }} dangerouslySetInnerHTML={{ __html: post.content || "" }} />
@@ -61,15 +101,16 @@ export default function PostDetail({ setShowBanner }) {
       <hr style={{ margin: "20px 0" }} />
       <h3>댓글</h3>
       <CommentForm 
-      postId={postId} 
-      categoryPath={categoryPath} 
-      onCommentAdded={handleCommentAdded} />
+        postId={postId} 
+        categoryPath={categoryPath} 
+        onCommentAdded={handleCommentAdded} 
+      />
 
-      <CommentList comments={comments} 
-      postId = {postId}
-      categoryPath={categoryPath}
-      parentId = {parent}
-      onCommentAdded={handleCommentAdded}
+      <CommentList 
+        comments={comments} 
+        postId={postId}
+        categoryPath={categoryPath}
+        onCommentAdded={handleCommentAdded}
       />
     </div>
   );

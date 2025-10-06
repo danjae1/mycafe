@@ -10,8 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@toast-ui/editor": "^3.2.2",
+    "@toast-ui/editor-plugin-code-syntax-highlight": "^3.1.0",
+    "@toast-ui/react-editor": "^3.2.3",
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
+    "highlight.js": "^11.11.1",
+    "jwt-decode": "^3.1.2",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
