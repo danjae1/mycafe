@@ -6,6 +6,7 @@ import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListResponse;
 import com.cafe.mycafe.domain.dto.PostDto.PostRequestDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostResponseDto;
+import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.security.CustomUserDetails;
 import com.cafe.mycafe.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +89,7 @@ public class PostController {
         }
 
     //게시글 등록
-    @PostMapping("/post")
+    @PostMapping("/posts")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostResponseDto> createPost(@AuthenticationPrincipal CustomUserDetails user,
                                                       @RequestBody PostRequestDto dto
@@ -101,23 +102,24 @@ public class PostController {
     }
 
     //게시글 삭제
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{postId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> deletePost(@PathVariable Long id,
+    public ResponseEntity<String> deletePost(@PathVariable Long postId,
                                              @AuthenticationPrincipal CustomUserDetails user) {
 
-        postService.deletePost(id, user.getId());
+        postService.deletePost(postId, user.getId());
         return ResponseEntity.ok("삭제되었습니다.");
     }
 
     //게시글 수정
-    @PatchMapping("/{id}")
+    @PatchMapping("/{postId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostResponseDto> updatePost(
-            @PathVariable Long id,
+            @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails user,
             @RequestBody PostRequestDto dto) {
-        PostResponseDto response = postService.updatePost(id, user.getId(), dto);
+        ;
+        PostResponseDto response = postService.updatePost(postId, user.getId(), dto);
         return ResponseEntity.ok(response);
     }
 }

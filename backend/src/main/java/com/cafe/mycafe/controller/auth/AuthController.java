@@ -2,11 +2,15 @@ package com.cafe.mycafe.controller.auth;
 
 import com.cafe.mycafe.domain.dto.UserDto.JwtResponseDto;
 import com.cafe.mycafe.domain.dto.UserDto.UserLoginRequestDto;
+import com.cafe.mycafe.domain.entity.UserEntity;
+import com.cafe.mycafe.repository.UserRepository;
+import com.cafe.mycafe.security.CustomUserDetails;
 import com.cafe.mycafe.util.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +31,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> login(@RequestBody UserLoginRequestDto dto) {
@@ -36,9 +41,7 @@ public class AuthController {
         try {
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword());
-            
-            //JWT발급 전 1회용 인증
-            //token 넣으면 내부적으로 UserDetailService + PasswordENcode를 이용해서 인증처리가 된다.
+
             authentication = authenticationManager.authenticate(authToken);
 
         } catch (BadCredentialsException e) {
@@ -50,34 +53,35 @@ public class AuthController {
                     .body(errorResponse);
         }
 
-        //1회용 인증이 성공하면,
-        // 인증된 사용자명
-        String username = authentication.getName();
+        // 인증된 UserDetails에서 UserEntity 가져오기
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserEntity user = userDetails.getUser(); // UserEntity 직접 접근 가능하도록 CustomUserDetails에 getUser() 추가
 
-        // 토큰 발급하기
-        String accessToken = jwtUtil.generateAccessToken(username,Map.of());
-        String refreshToken = jwtUtil.generateRefreshToken(username,Map.of());
-        Date expiration = jwtUtil.extractExpiration(accessToken); // 남은 만료시간 초단위로 바꿔주기
-        Long expiresIn = (expiration.getTime() - System.currentTimeMillis()) / 1000 ;
+        // 토큰 발급 (userId, username 포함)
+        String accessToken = jwtUtil.generateAccessToken(Map.of(), user);
+        String refreshToken = jwtUtil.generateRefreshToken(Map.of(),user);
 
-        //RefreshToken을 HttpOnly쿠키에 저장한다.
+        Date expiration = jwtUtil.extractExpiration(accessToken);
+        Long expiresIn = (expiration.getTime() - System.currentTimeMillis()) / 1000;
+
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false)   // HTTPS 환경이면 true
-                .sameSite("Strict") // CSRF 방지
-                .path("/")      // 전체 경로에서 유효
-                .maxAge(60 * 60 * 24 * 14) // 14일
+                .secure(false)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(60 * 60 * 24 * 14)
                 .build();
 
-        //응답에 Access 토큰과 만료시간을 넣고 응답한다.
         JwtResponseDto response = JwtResponseDto.builder()
                 .accessToken(accessToken)
                 .expiresIn(expiresIn)
                 .build();
 
-        return ResponseEntity.ok(response);
-
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(response);
     }
+
 
     //로그아웃시 토큰 삭제
     @PostMapping("/logout")
@@ -102,7 +106,10 @@ public class AuthController {
         }
 
         String username = jwtUtil.extractUsername(refreshToken);
-        String newAccessToken = jwtUtil.generateAccessToken(username, Map.of());
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자"));
+
+        String newAccessToken = jwtUtil.generateAccessToken(Map.of(),user);
 
         JwtResponseDto dto = JwtResponseDto.builder()
                 .accessToken("Bearer " + newAccessToken)

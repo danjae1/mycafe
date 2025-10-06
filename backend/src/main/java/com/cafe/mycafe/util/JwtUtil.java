@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.cafe.mycafe.domain.entity.UserEntity;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,19 +70,21 @@ public class JwtUtil {
 	 * userName과 추가 정보(Claims)를 전달하면 해당 정보를 token에 저장하고
 	 * 만들어진 token문자열을 리턴하는 메서드
 	 * */
-	public String generateAccessToken(String username, Map<String, Object> extraClaims) {
+	public String generateAccessToken(Map<String, Object> extraClaims,UserEntity user) {
 		Map<String, Object> claims = new HashMap<>(extraClaims);
-		return createToken(claims, username);
+		return createToken(claims, user);
 	}
 
-	public String generateRefreshToken(String username, Map<String, Object> extraClaims) {
+	public String generateRefreshToken( Map<String, Object> extraClaims,UserEntity user) {
 		Map<String, Object> claims = new HashMap<>(extraClaims);
-		return createToken(claims, username);
+		return createToken(claims, user);
 	}
 
-	private String createToken(Map<String, Object> claims, String subject) {
+	private String createToken(Map<String, Object> claims, UserEntity user) {
 		return Jwts.builder().setClaims(claims) // 추가 정보
-				.setSubject(subject) // 주요 정보(주로 userName)
+				.setSubject(user.getUsername()) // sub: username
+				.claim("userId", user.getId())  // userId 추가
+				.claim("username", user.getUsername()) // username 추가
 				.setIssuer("your-issuer") // 추가된 issuer(발급한 서비스명)
 				.setIssuedAt(new Date(System.currentTimeMillis())) // 발급 시간
 				.setExpiration(new Date(System.currentTimeMillis() + expiration)) // 파기되는 시간
