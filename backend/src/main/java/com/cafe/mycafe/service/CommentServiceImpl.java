@@ -189,7 +189,7 @@ public class CommentServiceImpl implements  CommentService{
                         .postTitle(comment.getPost().getTitle())
                         .createdAt(comment.getCreatedAt())
                         .likeCount(comment.getLikeCount())
-                        .likedByUser(commentLikeRepository.existsByCommentAndUser(comment, user)
+                        .likedByUser(commentLikeRepository.countByCommentAndUser(comment, user)>0
                         )
                         .build())
                 .collect(Collectors.toList());

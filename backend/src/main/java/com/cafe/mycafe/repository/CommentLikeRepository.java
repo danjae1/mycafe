@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface CommentLikeRepository extends JpaRepository<CommentLikeEntity, Long> {
 
     // 좋아요 중복 방지
-    boolean existsByCommentAndUser(CommentEntity commentEntity, UserEntity user);
+    long countByCommentAndUser(CommentEntity commentEntity, UserEntity user);
 
     // 댓글별 좋아요 개수 조회
     @Query("SELECT c.comment.id, COUNT(c) FROM CommentLikeEntity c WHERE c.comment.id IN :commentIds GROUP BY c.comment.id")

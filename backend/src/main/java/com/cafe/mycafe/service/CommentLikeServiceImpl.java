@@ -72,7 +72,7 @@ public class CommentLikeServiceImpl implements  CommentLikeService{
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        return commentLikeRepository.existsByCommentAndUser(comment, user);
+        return commentLikeRepository.countByCommentAndUser(comment, user) > 0;
     }
 
     @Override
