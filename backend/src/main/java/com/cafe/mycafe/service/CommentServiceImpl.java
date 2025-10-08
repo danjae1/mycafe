@@ -65,6 +65,7 @@ public class CommentServiceImpl implements  CommentService{
                 .id(comment.getId())
                 .content(comment.getContent())
                 .userName(user.getUsername())
+                .userId(comment.getUser().getId())
                 .createdAt(comment.getCreatedAt())
                 .deleted(false)
                 .likeCount(0)
@@ -76,7 +77,7 @@ public class CommentServiceImpl implements  CommentService{
     @Override
     public List<CommentResponseDto> getCommentsByPost(Long postId, Long userId) {
         //게시글 댓글 조회
-        List<CommentEntity> comments = commentRepository.findAllByPostIdAndDeletedFalse(postId);
+        List<CommentEntity> comments = commentRepository.findAllByPostId(postId);
 
         //  댓글 ID 추출
         List<Long> commentIds = comments.stream().map(CommentEntity::getId).toList();
@@ -109,13 +110,14 @@ public class CommentServiceImpl implements  CommentService{
                 .id(comment.getId())
                 .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
                 .userName(comment.getUser().getUsername())
+                .userId(comment.getUser().getId())
                 .createdAt(comment.getCreatedAt())
                 .deleted(comment.isDeleted())
                 .likeCount((int) likeCount)
                 .likedByMe(likedByMe)
                 .children(comment.getChildren() == null ? List.of() :
                         comment.getChildren().stream()
-                                .filter(c -> !c.isDeleted()) // 삭제된 댓글 제외
+//                                .filter(c -> !c.isDeleted()) // 삭제된 댓글 제외
                                 .map(c -> toDto(c, likeCountMap, likedByMeMap)) // 재귀 호출
                                 .toList())
                 .build();
@@ -142,6 +144,7 @@ public class CommentServiceImpl implements  CommentService{
                 .id(comment.getId())
                 .content(comment.getContent())
                 .userName(comment.getUser().getUsername())
+                .userId(comment.getUser().getId())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .deleted(comment.isDeleted())
@@ -159,7 +162,7 @@ public class CommentServiceImpl implements  CommentService{
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
 
-        if(!comment.getUser().getUsername().equals(userId)){
+        if(!comment.getUser().getId().equals(userId)){
             throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
         }
 

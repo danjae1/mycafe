@@ -16,7 +16,7 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     List<CommentEntity> findByParent(CommentEntity parent); // 대댓글 조회
     
     //게시글 Id로 삭제되지 않은 댓글 전체 조회하기
-    List<CommentEntity> findAllByPostIdAndDeletedFalse(Long postId);
+    List<CommentEntity> findAllByPostId(Long postId);
 
     // 특정 유저가 작성한 삭제되지 않은 댓글 조회
     //Page<CommentEntity> findAllByUserIdAndDeletedFalseOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
