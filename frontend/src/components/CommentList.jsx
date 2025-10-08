@@ -8,7 +8,9 @@ function CommentList({ comments, postId, categoryPath, onCommentAdded }) {
 
   return (
     <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-      {comments.map(comment => (
+      {comments
+      .filter(c => c !== null)
+      .map((comment) => (
         <CommentItem
           key={comment.id}
           comment={comment}

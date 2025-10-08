@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import CommentForm from "./CommentForm";
 import api from "../api/api";
+import jwt_decode from "jwt-decode";
 
 function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 }) {
+  if (!comment) return null; // comment 자체가 null이면 렌더링 안 함
+
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [showReplyForm, setShowReplyForm] = useState(false); // 답글 폼 표시 여부
   const [liked, setLiked] = useState(false); // 내가 좋아요 눌렀는지 여부
   const [likeCount, setLikeCount] = useState(0); // 좋아요 총 개수
@@ -10,9 +14,11 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
 
   const token = localStorage.getItem("accessToken");
 
-  // ✅ 댓글 좋아요 여부 및 개수 불러오기
   useEffect(() => {
     if (!token) return;
+
+    const decoded = jwt_decode(token);
+    setCurrentUserId(decoded.userId);
 
     // 내가 이 댓글에 좋아요 눌렀는지
     api
@@ -31,7 +37,6 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
       .catch(() => setLikeCount(0));
   }, [comment.id, token]);
 
-  // ✅ 좋아요 버튼 토글 (눌렀다 취소하기)
   const handleToggleLike = async () => {
     if (!token) {
       alert("로그인이 필요합니다.");
@@ -43,7 +48,6 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // 상태 즉시 반영
       setLiked((prev) => !prev);
       setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
     } catch (err) {
@@ -52,12 +56,13 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
     }
   };
 
-  // ✅ 댓글 삭제 처리
   const handleDelete = async () => {
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
 
     try {
-      await api.delete(`/${categoryPath}/posts/${postId}/comments/${comment.id}`);
+      await api.delete(`/comments/${comment.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert("댓글이 삭제되었습니다.");
       onCommentAdded(null); // 삭제 후 새로고침 트리거
     } catch (err) {
@@ -113,27 +118,33 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
         </button>
 
         {/* 삭제 버튼 */}
-        <button
-          onClick={handleDelete}
-          style={{
-            position: "absolute",
-            right: 70,
-            top: 8,
-            fontSize: "0.75rem",
-            color: "#f00",
-            backgroundColor: "#fef0f0",
-            border: "1px solid #fdd",
-            borderRadius: 4,
-            padding: "2px 6px",
-            cursor: "pointer",
-          }}
-        >
-          삭제
-        </button>
+        {comment.userId === currentUserId && !comment.deleted && (
+          <button
+            onClick={handleDelete}
+            style={{
+              position: "absolute",
+              right: 70,
+              top: 8,
+              fontSize: "0.75rem",
+              color: "#f00",
+              backgroundColor: "#fef0f0",
+              border: "1px solid #fdd",
+              borderRadius: 4,
+              padding: "2px 6px",
+              cursor: "pointer",
+            }}
+          >
+            삭제
+          </button>
+        )}
 
         {/* 🔹 작성자 / 내용 / 작성일 */}
-        <div style={{ fontWeight: "bold", marginBottom: 4 }}>{comment.userName || "익명"}</div>
-        <div style={{ color: "#333", marginBottom: 6 }}>{comment.content}</div>
+        <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+          {comment.userName || "익명"}
+        </div>
+        <div style={{ color: "#333", marginBottom: 6 }}>
+          {comment.deleted ? "삭제된 댓글입니다." : comment.content}
+        </div>
         <div style={{ fontSize: "0.75rem", color: "#888", marginBottom: 8 }}>
           작성일: {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}
         </div>
@@ -167,16 +178,18 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
       {/* 🔹 자식 댓글 재귀 렌더링 */}
       {comment.children?.length > 0 && (
         <ul style={{ listStyle: "none", paddingLeft: 0, marginTop: 8 }}>
-          {comment.children.map((child) => (
-            <CommentItem
-              key={child.id}
-              comment={child}
-              postId={postId}
-              categoryPath={categoryPath}
-              onCommentAdded={onCommentAdded}
-              level={level + 1}
-            />
-          ))}
+          {comment.children.map((child) =>
+            child ? (
+              <CommentItem
+                key={child.id}
+                comment={child}
+                postId={postId}
+                categoryPath={categoryPath}
+                onCommentAdded={onCommentAdded}
+                level={level + 1}
+              />
+            ) : null
+          )}
         </ul>
       )}
     </li>
