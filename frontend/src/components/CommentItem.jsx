@@ -6,6 +6,8 @@ import jwt_decode from "jwt-decode";
 function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 }) {
   if (!comment) return null; // comment 자체가 null이면 렌더링 안 함
 
+  const [isEditing, setIsEditing] = useState(false); // 🔹 수정 모드 여부
+  const [editedContent, setEditedContent] = useState(comment.content); // 🔹 수정 중 내용
   const [currentUserId, setCurrentUserId] = useState(null);
   const [showReplyForm, setShowReplyForm] = useState(false); // 답글 폼 표시 여부
   const [liked, setLiked] = useState(false); // 내가 좋아요 눌렀는지 여부
@@ -70,7 +72,26 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
       alert("댓글 삭제 실패");
     }
   };
-
+  // 🔹 수정 저장
+  const handleSaveEdit = async () => {
+    if (editedContent.trim() === "") {
+      alert("내용을 입력하세요.");
+      return;
+    }
+    try {
+      await api.patch(
+        `/comments/${comment.id}`,
+        { content: editedContent },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("댓글이 수정되었습니다.");
+      setIsEditing(false);
+      onCommentAdded(null); // 목록 새로고침
+    } catch (err) {
+      console.error(err);
+      alert("댓글 수정 실패");
+    }
+  };
   return (
     <li style={{ marginBottom: 12, position: "relative" }}>
       {/* ┃ 대댓글 구분용 세로선 */}
@@ -119,6 +140,7 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
 
         {/* 삭제 버튼 */}
         {comment.userId === currentUserId && !comment.deleted && (
+          <>
           <button
             onClick={handleDelete}
             style={{
@@ -136,15 +158,80 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
           >
             삭제
           </button>
+
+          {/* 🔹 수정 버튼 */}
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              style={{
+                position: "absolute",
+                right: 130,
+                top: 8,
+                fontSize: "0.75rem",
+                color: "#555",
+                backgroundColor: "#f0f0f0",
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                padding: "2px 6px",
+                cursor: "pointer",
+              }}
+            >
+              {isEditing ? "취소" : "수정"}
+            </button>
+            </>
         )}
 
         {/* 🔹 작성자 / 내용 / 작성일 */}
         <div style={{ fontWeight: "bold", marginBottom: 4 }}>
           {comment.userName || "익명"}
         </div>
-        <div style={{ color: "#333", marginBottom: 6 }}>
-          {comment.deleted ? "삭제된 댓글입니다." : comment.content}
-        </div>
+
+        {isEditing ? (
+          <>
+            <textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              rows={3}
+              style={{
+                width: "100%",
+                resize: "none",
+                padding: 6,
+                borderRadius: 6,
+                border: "1px solid #ccc",
+              }}
+            />
+            <div style={{ marginTop: 6 }}>
+              <button
+                onClick={handleSaveEdit}
+                style={{
+                  marginRight: 8,
+                  backgroundColor: "#0095f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "4px 8px",
+                }}
+              >
+                저장
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                style={{
+                  backgroundColor: "#eee",
+                  border: "1px solid #ccc",
+                  borderRadius: 4,
+                  padding: "4px 8px",
+                }}
+              >
+                취소
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ color: "#333", marginBottom: 6 }}>
+            {comment.deleted ? "삭제된 댓글입니다." : comment.content}
+          </div>
+        )}
+
         <div style={{ fontSize: "0.75rem", color: "#888", marginBottom: 8 }}>
           작성일: {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}
         </div>
