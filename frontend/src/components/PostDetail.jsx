@@ -9,6 +9,9 @@ export default function PostDetail({ setShowBanner }) {
   const { categoryPath, postId } = useParams();
   const navigate = useNavigate();
 
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +44,16 @@ export default function PostDetail({ setShowBanner }) {
       .then(res => setComments(res.data || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
-
+    
+    if (token) {
+      api.get(`/${postId}/like`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })  
+        .then((res) => {
+          setLiked(res.data); // Boolean 반환한다고 가정
+        })
+        .catch((err) => console.error("좋아요 상태 불러오기 실패:", err));
+    }
     return () => setShowBanner(true);
   }, [postId, token, setShowBanner]);
 
@@ -66,8 +78,30 @@ export default function PostDetail({ setShowBanner }) {
       alert("삭제 중 오류가 발생했습니다.");
     }
   };
+
+  
+  const handleToggleLike = async () => {
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+  try {
+    const res = await api.post(
+      `/${postId}/like`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setLiked((prev) => !prev);
+    setLikeCount(res.data.likeCount); // 백엔드에서 갱신된 수 내려줄 경우
+  } catch (err) {
+    console.error(err);
+    alert("좋아요 처리 실패");
+  }
+};
+
   console.log("currentUser", currentUser); 
   console.log("post.userId", post.userId);
+
   return (
     <div style={{ padding: 20 }}>
       <button onClick={() => navigate(-1)} style={{ marginBottom: 12 }}>◀ 뒤로</button>
@@ -77,9 +111,23 @@ export default function PostDetail({ setShowBanner }) {
         작성자: {post.writer} &nbsp;|&nbsp;
         작성일: {post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}
       </div>
-      <div style={{ marginBottom: 10, color: "#888" }}>
-        조회수: {post.viewCount ?? 0} &nbsp; 추천: {post.likeCount ?? 0}
-      </div>
+      <div style={{ marginBottom: 10, color: "#888", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span>조회수: {post.viewCount ?? 0}</span>
+        <span>추천: {likeCount}</span>
+        <button
+          onClick={handleToggleLike}
+          style={{
+            border: "none",
+            background: "none",
+            color: liked ? "red" : "#555",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontWeight: liked ? "bold" : "normal",
+          }}
+        >
+          ♥
+        </button>
+</div>
 
       {/* 작성자이면 수정/삭제 버튼 표시 */}
       {currentUser?.id === post.userId && (
