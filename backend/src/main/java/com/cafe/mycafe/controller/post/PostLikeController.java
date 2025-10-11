@@ -53,11 +53,12 @@ public class PostLikeController {
     }
 
     //게시글에 좋아요 누르기
-    @PostMapping("/post/{postId}/like")
+    @PostMapping("/{postId}/like")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PostLikeResponseDto> toggleLike(@PathVariable Long postId,
-                                                          @AuthenticationPrincipal Long userId){
+                                                          @AuthenticationPrincipal CustomUserDetails userDetails){
 
+        Long userId = userDetails.getId();
         PostLikeResponseDto response = postLikeService.toggleLike(postId, userId);
 
         return ResponseEntity.ok(response);

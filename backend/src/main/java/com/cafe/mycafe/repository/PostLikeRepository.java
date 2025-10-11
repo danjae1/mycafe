@@ -20,8 +20,11 @@ public interface PostLikeRepository extends JpaRepository<PostLikeEntity, Long> 
     // 삭제/수정용 엔티티 조회
     Optional<PostLikeEntity> findByPostAndUser(PostEntity post, UserEntity user);
 
-    // 유저가 좋아요 누른 글 전체 조회
-    @Query("SELECT pl FROM PostLikeEntity pl JOIN pl.post p WHERE p.user.id = :userId")
+//    // 유저가 좋아요 누른 글 전체 조회
+//    @Query("SELECT pl FROM PostLikeEntity pl JOIN pl.post p WHERE p.user.id = :userId")
+//    List<PostLikeEntity> findAllByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT pl FROM PostLikeEntity pl WHERE pl.user.id = :userId")
     List<PostLikeEntity> findAllByUserId(@Param("userId") Long userId);
 
     // 특정 게시글 좋아요 수

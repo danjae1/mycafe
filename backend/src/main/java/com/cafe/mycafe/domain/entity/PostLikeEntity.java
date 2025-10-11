@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -17,15 +16,16 @@ import java.time.LocalDateTime;
 public class PostLikeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_like_seq")
+    @SequenceGenerator(name = "post_like_seq", sequenceName = "POST_LIKE_SEQ", allocationSize = 1)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name ="post_id",nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name ="post_id", nullable = false)
     private PostEntity post;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_ID", nullable = false)
     private UserEntity user;
 
     @Column(nullable = false)
@@ -33,6 +33,8 @@ public class PostLikeEntity {
 
     @PrePersist
     public void prePersist(){
-        this.likedAt = LocalDateTime.now();
+        if (this.likedAt == null) {
+            this.likedAt = LocalDateTime.now();
+        }
     }
 }

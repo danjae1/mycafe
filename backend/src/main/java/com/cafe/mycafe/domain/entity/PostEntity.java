@@ -35,6 +35,7 @@ public class PostEntity {
     private Long viewCount = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long likeCount = 0L;
 
     @ManyToOne(fetch =FetchType.EAGER)
