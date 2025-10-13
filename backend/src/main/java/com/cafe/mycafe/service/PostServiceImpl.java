@@ -243,6 +243,7 @@ public class PostServiceImpl implements PostService{
                     .id(post.getId())
                     .title(post.getTitle())
                     .writer(post.getUser().getUsername())
+                    .viewCount(post.getViewCount())
                     .likeCount(post.getLikeCount())
                     .likedByUser(likedByUser)
                     .thumbnailUrl(post.getThumbnailUrl())
