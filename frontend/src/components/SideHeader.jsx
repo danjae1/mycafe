@@ -6,7 +6,7 @@ import WriteButton from "./WriteButton";
 
 export default function SideHeader() {
   const [activeTab, setActiveTab] = useState("cafe"); // 기본 MyCafe
-
+  
   return (
     <div
       style={{
