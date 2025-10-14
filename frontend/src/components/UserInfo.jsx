@@ -25,8 +25,8 @@ export default function UserInfo() {
     <div style={{ textAlign: "center" }}>
       <p><strong>{userSummary.nickname}</strong></p>
       <p>등급: {userSummary.grade}</p>
-      <p>작성 글: {userSummary.postCount}개</p>
-      <p>작성 댓글: {userSummary.commentCount}개</p>
+      <p>내가 쓴 글: {userSummary.postCount}개</p>
+      <p>내가 쓴 댓글: {userSummary.commentCount}개</p>
       <p>가입일: {new Date(userSummary.joinDate).toLocaleDateString()}</p>
     </div>
   );
