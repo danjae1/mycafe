@@ -6,6 +6,7 @@ import com.cafe.mycafe.domain.entity.Grade;
 import com.cafe.mycafe.domain.entity.Role;
 import com.cafe.mycafe.domain.entity.UserEntity;
 import com.cafe.mycafe.repository.CommentRepository;
+import com.cafe.mycafe.repository.PostLikeRepository;
 import com.cafe.mycafe.repository.PostRepository;
 import com.cafe.mycafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final PostLikeRepository postLikeRepository;
 
     public UserSummaryResponse getMySummary(Long userId) {
         UserEntity user = userRepository.findById(userId)
@@ -30,13 +32,15 @@ public class UserServiceImpl implements UserService{
 
         int postCount = postRepository.countByUserId(userId);
         int commentCount = commentRepository.countByUserId(userId);
+        int likedPostCount = postLikeRepository.countByUserId(userId);
 
         return UserSummaryResponse.builder()
                 .userId(user.getId())
                 .postCount(postCount)
                 .commentCount(commentCount)
+                .likedPostCount(likedPostCount)
                 .grade(user.getGrade())
-                .createdAt(user.getJoinDate())
+                .joinDate(user.getJoinDate())
                 .build();
     }
 
@@ -65,5 +69,32 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
     }
 
+    // ✅ 내 정보 조회
+    public UserEntity getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    }
+
+    // ✅ 내 정보 수정
+    public UserEntity updateUser(Long userId, UserEntity updatedUser) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (updatedUser.getEmail() != null)
+            user.setEmail(updatedUser.getEmail());
+
+        if (updatedUser.getUsername() != null)
+            user.setUsername(updatedUser.getUsername());
+
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty())
+            user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+
+        return userRepository.save(user);
+    }
+
+    // ✅ 회원 탈퇴
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
+    }
 
 }

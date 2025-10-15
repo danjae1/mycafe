@@ -21,6 +21,7 @@ public class PostListItemDto {
     private String title;
     private Long viewCount;
     private Long likeCount;
+    private Long commentCount;
     private boolean likedByUser;
     private String thumbnailUrl;
     private String categoryName;

@@ -1,6 +1,7 @@
 package com.cafe.mycafe.service;
 
 import com.cafe.mycafe.domain.dto.PostDto.PostLikeResponseDto;
+import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.domain.entity.PostLikeEntity;
 import com.cafe.mycafe.domain.entity.UserEntity;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,7 +25,7 @@ public class PostLikeServiceImpl implements PostLikeService{
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
-    
+
     @Transactional
     @Override
     public PostLikeResponseDto toggleLike(Long postId, Long userId) {
@@ -73,11 +75,21 @@ public class PostLikeServiceImpl implements PostLikeService{
 
     @Override
     //마이페이지용 내가 좋아요 누른 글 확인하기
-    public List<Long> getLikedPostIdsByUser(Long userId) {
+    public List<PostListItemDto> getLikedPostsByUser(Long userId) {
 
-        return postLikeRepository.findAllByUserId(userId)
-                .stream()
-                .map(like -> like.getPost().getId())
+        List<PostEntity> posts = postLikeRepository.findLikedPostsByUser(userId);
+
+        return posts.stream()
+                .map(post -> PostListItemDto.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .writer(post.getWriter())
+                        .createdAt(post.getCreatedAt())
+                        .viewCount(post.getViewCount())
+                        .categoryName(post.getCategory().getName())
+                        .commentCount((long) post.getComments().size())
+                        .likeCount(post.getLikeCount())
+                        .build())
                 .collect(Collectors.toList());
     }
 }

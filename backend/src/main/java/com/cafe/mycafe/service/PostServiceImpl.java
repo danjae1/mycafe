@@ -283,6 +283,7 @@ public class PostServiceImpl implements PostService{
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));
 
+
         return posts.stream()
                 .map(post -> PostListItemDto.builder()
                         .id(post.getId())
@@ -291,10 +292,30 @@ public class PostServiceImpl implements PostService{
                         .likeCount(post.getLikeCount()) // n+1문제 파히기위해 db에서 바로 카운트
                         .likedByUser(userId != null && postLikeRepository.existsByPostAndUser(post,user))
                         .thumbnailUrl(post.getThumbnailUrl())
+                        .viewCount(post.getViewCount())
+                        .commentCount((long) post.getComments().size())  // 댓글 수 n+1
                         .categoryName(post.getCategory().getName())
                         .createdAt(post.getCreatedAt())
                         .build())
 
                 .collect(Collectors.toList());
     }
+
+    public List<PostListItemDto> getPostsCommentedByUser(Long targetUserId, Long userId) {
+        List<PostListItemDto> posts = postRepository.findPostsCommentedByUser(targetUserId);
+
+        if (userId != null) {
+            UserEntity user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+
+            // 사용자가 좋아요한 게시글 표시
+            posts.forEach(post ->
+                    post.setLikedByUser(postLikeRepository.existsByPostIdAndUserId(post.getId(), user.getId()))
+            );
+        }
+
+        return posts;
+    }
+
+
 }

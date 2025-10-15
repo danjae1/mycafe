@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Data
@@ -26,6 +27,9 @@ public class PostEntity {
     @Lob
     @Column(nullable = false)
     private String content;
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<CommentEntity> comments;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -50,6 +54,11 @@ public class PostEntity {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+
+        // writer가 비어있다면 user.username으로 채우기
+        if (this.writer == null && this.user != null) {
+            this.writer = this.user.getUsername();
+        }
     }
 
     @PreUpdate

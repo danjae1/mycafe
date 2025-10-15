@@ -29,7 +29,7 @@ public class CategoryController {
 
     
     //카테고리 생성 관리자만 가능
-    @PostMapping
+    @PostMapping("/categories")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponseDto> crateCategory(@RequestBody CategoryRequestDto requestDto){
 
@@ -39,7 +39,7 @@ public class CategoryController {
     }
     
     //카테고리명 수정 관리자만 가능
-    @PatchMapping
+    @PatchMapping("/categories")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponseDto> updateCategory(
             @PathVariable Long id,
@@ -51,7 +51,7 @@ public class CategoryController {
     }
 
     //카테고리 삭제 관리자만 가능
-    @DeleteMapping
+    @DeleteMapping("/categories")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
 

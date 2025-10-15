@@ -27,6 +27,14 @@ public interface PostLikeRepository extends JpaRepository<PostLikeEntity, Long> 
     @Query("SELECT pl FROM PostLikeEntity pl WHERE pl.user.id = :userId")
     List<PostLikeEntity> findAllByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT p FROM PostLikeEntity pl JOIN pl.post p WHERE pl.user.id = :userId")
+    List<PostEntity> findLikedPostsByUser(@Param("userId") Long userId);
+
     // 특정 게시글 좋아요 수
     Long countByPostId(Long postId);
+
+    // 관계 기반 존재 여부 확인
+    boolean existsByPostIdAndUserId(Long postId, Long userId);
+
+    int countByUserId(Long userId);
 }

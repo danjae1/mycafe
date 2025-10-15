@@ -15,6 +15,7 @@ public class UserSummaryResponse {
     private Long userId;
     private int postCount;
     private int commentCount;
+    private int likedPostCount;
     private Enum grade;
-    private LocalDateTime createdAt;
+    private LocalDateTime joinDate;
 }

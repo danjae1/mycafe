@@ -2,12 +2,14 @@ package com.cafe.mycafe.controller.post;
 
 
 import com.cafe.mycafe.controller.exceptioncontroller.CategoryNotFoundException;
+import com.cafe.mycafe.domain.dto.CommentDto.CommentListItemDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListResponse;
 import com.cafe.mycafe.domain.dto.PostDto.PostRequestDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostResponseDto;
 import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.security.CustomUserDetails;
+import com.cafe.mycafe.service.CommentService;
 import com.cafe.mycafe.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +27,22 @@ import java.util.Map;
 public class PostController {
 
     private final PostService postService;
-    
+    private final CommentService commentService;
+
+    // 타 유저
+    @GetMapping("/users/{userId}/replied")
+    public ResponseEntity<List<PostListItemDto>> getUserComments(@PathVariable Long userId){
+        List<PostListItemDto> comments = postService.getPostsCommentedByUser(userId, null);
+        return ResponseEntity.ok(comments);
+    }
+
+    // 본인
+    @GetMapping("/comments/replied/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<PostListItemDto>> getMyComments(@AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(postService.getPostsCommentedByUser(userDetails.getId(), userDetails.getId()));
+    }
+
     //마이페이지 내가 쓴 글 목록 불러오기
     @GetMapping("/posts/me")
     @PreAuthorize("isAuthenticated()")

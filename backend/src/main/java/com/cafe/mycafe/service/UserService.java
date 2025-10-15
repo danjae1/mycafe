@@ -8,6 +8,12 @@ import com.cafe.mycafe.repository.UserRepository;
 public interface UserService {
 
     public void signUp(UserSignUpRequestDto dto);
+    public UserEntity getUser(Long id);
+    public UserEntity updateUser(Long id, UserEntity updatedUser);
+    public void deleteUser(Long id);
+
     public UserSummaryResponse getMySummary(Long userId);
-    public UserEntity findById(Long id);
+    //public UserEntity findById(Long id);
+
+
 }

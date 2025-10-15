@@ -1,6 +1,7 @@
 package com.cafe.mycafe.controller.post;
 
 import com.cafe.mycafe.domain.dto.PostDto.PostLikeResponseDto;
+import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.security.CustomUserDetails;
 import com.cafe.mycafe.service.PostLikeService;
 import lombok.RequiredArgsConstructor;
@@ -22,21 +23,20 @@ public class PostLikeController {
     //마이페지이 내가 좋아요한 글 목록 불러오기
     @GetMapping("/liked")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Long>> getLikedPostByMe(Authentication authentication){
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    public ResponseEntity<List<PostListItemDto>> getLikedPostByMe(@AuthenticationPrincipal CustomUserDetails userDetails){
         Long userId = userDetails.getId();
 
-        List<Long> likedPostIds = postLikeService.getLikedPostIdsByUser(userId);
-        return ResponseEntity.ok(likedPostIds);
+        List<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId);
+        return ResponseEntity.ok(likedPosts);
     }
 
     //타 유저 좋아요한 글 목록 불러오기
-    @GetMapping("/{userId}/liked")
+    @GetMapping("/users/{userId}/liked")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Long>> getLikedPostByUser(@PathVariable  Long userId){
+    public ResponseEntity<List<PostListItemDto>> getLikedPostByUser(@PathVariable  Long userId){
 
-        List<Long> likedPostIds = postLikeService.getLikedPostIdsByUser(userId);
-        return ResponseEntity.ok(likedPostIds);
+        List<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId);
+        return ResponseEntity.ok(likedPosts);
     }
 
     //단일 게시글 좋아요 여부 확인 Ui용

@@ -49,6 +49,23 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    // ✅ 내 정보 조회
+    @GetMapping("/users")
+    public UserEntity getUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return userService.getUser(userDetails.getUser().getId());
+    }
 
+    // ✅ 내 정보 수정
+    @PatchMapping("/users")
+    public UserEntity updateUser(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                   @RequestBody UserEntity updatedUser) {
+        return userService.updateUser(userDetails.getUser().getId(), updatedUser);
+    }
+
+    // ✅ 회원 탈퇴
+    @DeleteMapping("/users")
+    public void deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        userService.deleteUser(userDetails.getUser().getId());
+    }
 
 }

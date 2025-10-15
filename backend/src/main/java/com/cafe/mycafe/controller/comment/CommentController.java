@@ -31,7 +31,7 @@ public class CommentController {
     private final CommentService commentService;
 
     // 마이페이지에서 내가 쓴 댓글 목록 조회
-    @GetMapping("/me")
+    @GetMapping("/comments/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CommentListItemDto>> getMyComments(@AuthenticationPrincipal CustomUserDetails userDetails){
 
@@ -44,7 +44,7 @@ public class CommentController {
     }
 
     // 다른 유저가 쓴 댓글 목록 조회
-    @GetMapping("/user/{targetUserId}")
+    @GetMapping("/comments/{targetUserId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CommentListItemDto>> getCommentsByUser(@PathVariable Long targetUserId,
                                                                       @AuthenticationPrincipal CustomUserDetails userDetails){

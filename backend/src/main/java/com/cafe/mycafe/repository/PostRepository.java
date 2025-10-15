@@ -1,5 +1,6 @@
 package com.cafe.mycafe.repository;
 
+import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.entity.CategoryEntity;
 import com.cafe.mycafe.domain.entity.PostEntity;
 
@@ -56,5 +57,29 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     // 유저가 쓴 글 목록 조회
     List<PostEntity> findAllByUser_IdOrderByCreatedAtDesc(Long userId);
+
+    // 유저가 댓글 남긴 글의 목록 가져오기
+    @Query("""
+    select new com.cafe.mycafe.domain.dto.PostDto.PostListItemDto(
+        p.id,
+        p.writer,
+        p.title,
+        p.viewCount,
+        p.likeCount,
+        count(distinct c.id),
+        false,
+        p.thumbnailUrl,
+        p.category.name,
+        p.createdAt
+    )
+    from CommentEntity c
+    join c.post p
+    where c.user.id = :userId
+    group by p.id, p.writer, p.title, p.viewCount, p.likeCount, 
+             p.thumbnailUrl, p.category.name, p.createdAt
+    order by p.createdAt desc
+""")
+    List<PostListItemDto> findPostsCommentedByUser(@Param("userId") Long userId);
+
 
 }
