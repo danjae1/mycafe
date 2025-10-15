@@ -8,12 +8,16 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/SignUp";
 import api from "./api/api";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function App() {
   const [page, setPage] = useState("home"); // "home" | "login" | "signup"
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
   const [showBanner, setShowBanner] = useState(true);
+
+  const navigate = useNavigate();
+  const location = useLocation(); // 현재 경로 확인
 
   // 새로고침 시 서버에서 로그인 상태 확인
   useEffect(() => {
@@ -22,12 +26,11 @@ export default function App() {
     const checkLogin = async () => {
       try {
         if (!accessToken) {
-          // 토큰 없으면 서버에서 상태 확인
           const res = await api.get("/check", { withCredentials: true });
           if (!mounted) return;
           setIsLoggedIn(res.data.isLoggedIn);
         } else {
-          setIsLoggedIn(true); // localStorage에 토큰 있으면 로그인 상태
+          setIsLoggedIn(true);
         }
       } catch (err) {
         console.log("checkLogin 에러:", err);
@@ -47,7 +50,7 @@ export default function App() {
       setIsLoggedIn(false);
       setAccessToken(null);
       localStorage.removeItem("accessToken");
-      setPage("home");
+      navigate("/");
     } catch (err) {
       console.log(err);
     }
@@ -64,7 +67,15 @@ export default function App() {
   // 회원가입 성공 처리
   const handleSignupSuccess = () => setPage("login");
 
-  // 로그인/회원가입 모달은 항상 렌더링
+  // 경로에 따라 MainBanner 보여줄지 결정
+  useEffect(() => {
+    if (location.pathname === "/") {
+      setShowBanner(true); // 홈일 때 배너 보이기
+    } else {
+      setShowBanner(false); // 홈이 아니면 배너 숨기기
+    }
+  }, [location.pathname]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", boxSizing: "border-box" }}>
       {/* Navbar */}
@@ -131,6 +142,6 @@ export default function App() {
         onSignupSuccess={handleSignupSuccess}
         onCancel={() => setPage("home")}
       />
-    </div> 
+    </div>
   );
 }

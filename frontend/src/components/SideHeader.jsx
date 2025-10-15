@@ -21,6 +21,7 @@ export default function SideHeader() {
         flexDirection: "column",
         gap: "8px",
         padding: "10px",
+        overflow: "hidden", // 가로 스크롤 방지
       }}
     >
       {/* 상단 탭 */}
@@ -37,7 +38,7 @@ export default function SideHeader() {
             padding: "5px 0",
           }}
         >
-          MyCafe
+          카페 정보
         </div>
         <div
           onClick={() => setActiveTab("user")}
@@ -68,7 +69,7 @@ export default function SideHeader() {
       {/* 아래 버튼 */}
        <div style={{ marginTop: "auto" }}>
         <WriteButton />
-        <WriteButton />
+    
         </div>
     </div>
   );

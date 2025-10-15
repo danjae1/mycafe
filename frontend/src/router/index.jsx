@@ -4,6 +4,8 @@ import PostList from "../components/PostList";
 import PostDetail from "../components/PostDetail";
 import PostWrite from "../components/PostWrite";
 import PostEdit from "../components/PostEdit";
+import MemberPage from "../pages/MemberPage";
+import MyPage from "../pages/MyPage";
 
 
 export default function AppRouter({setShowBanner}) {
@@ -17,6 +19,8 @@ export default function AppRouter({setShowBanner}) {
       <Route path="/:categoryPath/posts/:postId" element={<PostDetail setShowBanner={setShowBanner} />} />
      <Route path="/write" element={<PostWrite />} />
      <Route path="/:categoryPath/posts/:postId/edit" element={<PostEdit />} />
+     <Route path="/members/:userId" element={<MemberPage setShowBanner = {setShowBanner} />} />
+     <Route path="/my-page" element={<MyPage />} />
     </Routes>
   );
 }

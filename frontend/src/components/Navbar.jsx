@@ -30,7 +30,7 @@ export default function Navbar({ onLoginClick, onSignupClick ,isLoggedIn,onLogou
               variant="outline-dark"
               size="sm"
               style={{ color: "black", fontSize: "0.8rem" }}
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/my-page")}
             >
               마이페이지
             </Button>
@@ -39,6 +39,7 @@ export default function Navbar({ onLoginClick, onSignupClick ,isLoggedIn,onLogou
               size="sm"
               style={{ color: "black", fontSize: "0.8rem" }}
               onClick={onLogout}
+              
             >
               로그아웃
             </Button>
