@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import CommentForm from "./CommentForm";
 import api from "../api/api";
 import jwt_decode from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 }) {
   if (!comment) return null; // comment 자체가 null이면 렌더링 안 함
@@ -15,6 +16,8 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
   const indent = level * 20;
 
   const token = localStorage.getItem("accessToken");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return;
@@ -181,8 +184,11 @@ function CommentItem({ comment, postId, categoryPath, onCommentAdded, level = 0 
         )}
 
         {/* 🔹 작성자 / 내용 / 작성일 */}
-        <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+        <div className = "username" style={{ fontWeight: "bold", marginBottom: 4 }}>
+          <span
+          onClick={()=> navigate(`/members/${comment.userId}?tab=articles`)}>
           {comment.userName || "익명"}
+          </span>
         </div>
 
         {isEditing ? (

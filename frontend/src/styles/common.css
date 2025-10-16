@@ -1,0 +1,18 @@
+/* src/styles/common.css */
+
+/* 🔹 모든 유저 닉네임 스타일 */
+.username {
+  font-weight: bold;
+  color: green;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+
+.username:hover {
+  color: #0056b3;
+}
+
+.username:active {
+  
+}

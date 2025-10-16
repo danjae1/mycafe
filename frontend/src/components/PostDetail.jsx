@@ -103,13 +103,22 @@ export default function PostDetail({ setShowBanner }) {
   console.log("post.userId", post.userId);
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{
+              transition: "color 0.2s ease", // 부드러운 색 전환
+          }}
+    >
       <button onClick={() => navigate(-1)} style={{ marginBottom: 12 }}>◀ 뒤로</button>
 
       <h2>{post.title}</h2>
       <div style={{ color: "#666", marginBottom: 10 }}>
-        작성자: {post.writer} &nbsp;|&nbsp;
-        작성일: {post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}
+        작성자 :   
+        <span className = "username" onClick={()=> navigate(`/members/${post.userId}?tab=articles`)}
+          style = {{cursor: "pointer"}}>           
+           {post.writer}
+        </span>
+        {/* postDetail LocalDate타입 확인 */}
+        {/* 작성일: {post.createdAt ? new Date(post.createdAt).toLocaleString() : ""} */}
+        작성일: {post.createdAt}
       </div>
       <div style={{ marginBottom: 10, color: "#888", display: "flex", alignItems: "center", gap: "8px" }}>
         <span>조회수: {post.viewCount ?? 0}</span>

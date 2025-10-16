@@ -8,6 +8,7 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/SignUp";
 import api from "./api/api";
+import "./styles/common.css";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function App() {
