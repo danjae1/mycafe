@@ -62,6 +62,14 @@ public class UserController {
         return userService.updateUser(userDetails.getUser().getId(), updatedUser);
     }
 
+    @PatchMapping("/password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody PasswordChangeRequest request){
+        userService.changePassword(userDetails.getId(), request);
+        return ResponseEntity.ok("비밀번호가 변경되었습니다 !!");
+    }
+
     // ✅ 회원 탈퇴
     @DeleteMapping("/users")
     public void deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
