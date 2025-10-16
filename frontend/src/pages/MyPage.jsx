@@ -35,7 +35,7 @@ export default function MyPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/users`, formData, {
+      await api.patch(`/users`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("회원정보가 수정되었습니다.");
@@ -56,7 +56,7 @@ export default function MyPage() {
     }
 
     try {
-      await api.put(`/users/password`, passwordData, {
+      await api.patch(`/password`, passwordData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("비밀번호가 변경되었습니다.");
