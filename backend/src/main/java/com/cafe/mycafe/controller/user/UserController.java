@@ -39,7 +39,8 @@ public class UserController {
         userService.signUp(dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
-
+    
+    //SideHeader에 들어갈 내 summary 정보
     @GetMapping("/users/me")
     public ResponseEntity<UserSummaryResponse> getMySummary(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
@@ -49,7 +50,14 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ 내 정보 조회
+    // 타 유저 클릭시 간략 정보
+    @GetMapping("/users/{userId}/info")
+    public ResponseEntity<UserSummaryResponse> getUserInfo(@PathVariable Long userId) {
+        UserSummaryResponse response = userService.getMySummary(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    // 마이페이지 내 정보 조회
     @GetMapping("/users")
     public UserEntity getUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return userService.getUser(userDetails.getUser().getId());
