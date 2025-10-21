@@ -20,11 +20,14 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     // 전체 게시글 페이징 (NativeQuery + ROW_NUMBER)
     @Query(value = """
-        SELECT * FROM (
-            SELECT p.*, ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn
-            FROM post_entity p
-            WHERE deleted = 0
-        )
+        SELECT p.ID, p.WRITER, p.TITLE, p.IMAGE_URL, p.THUMBNAIL_URL, p.CONTENT,
+               p.CREATED_AT, p.UPDATED_AT, p.DELETED, p.VIEW_COUNT, p.LIKE_COUNT,
+               p.USER_ID, p.CATEGORY_ID
+        FROM (
+            SELECT p.*, ROW_NUMBER() OVER (ORDER BY p.CREATED_AT DESC) AS rn
+            FROM POST_ENTITY p
+            WHERE p.DELETED = 0
+        ) p
         WHERE rn BETWEEN :startRow AND :endRow
         """, nativeQuery = true)
     List<PostEntity> findPostsWithPaging(
@@ -34,11 +37,14 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     // 카테고리별 게시글 페이징
     @Query(value = """
-        SELECT * FROM (
-            SELECT p.*, ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn
-            FROM post_entity p
-            WHERE deleted = 0 AND category_id = :categoryId
-        )
+        SELECT p.ID, p.WRITER, p.TITLE, p.IMAGE_URL, p.THUMBNAIL_URL, p.CONTENT,
+               p.CREATED_AT, p.UPDATED_AT, p.DELETED, p.VIEW_COUNT, p.LIKE_COUNT,
+               p.USER_ID, p.CATEGORY_ID
+        FROM (
+            SELECT p.*, ROW_NUMBER() OVER (ORDER BY p.CREATED_AT DESC) AS rn
+            FROM POST_ENTITY p
+            WHERE p.DELETED = 0 AND p.CATEGORY_ID = :categoryId
+        ) p
         WHERE rn BETWEEN :startRow AND :endRow
         """, nativeQuery = true)
     List<PostEntity> findByCategoryWithPaging(
@@ -52,34 +58,60 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     int countAllByDeletedFalse();
 
     // 카테고리별 게시글 수 (NativeQuery)
-    @Query(value = "SELECT COUNT(*) FROM post_entity WHERE deleted = 0 AND category_id = :categoryId", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM POST_ENTITY WHERE DELETED = 0 AND CATEGORY_ID = :categoryId", nativeQuery = true)
     int countByCategoryNative(@Param("categoryId") Long categoryId);
 
     // 유저가 쓴 글 목록 조회
     List<PostEntity> findAllByUser_IdOrderByCreatedAtDesc(Long userId);
 
-    // 유저가 댓글 남긴 글의 목록 가져오기
-    @Query("""
-    select new com.cafe.mycafe.domain.dto.PostDto.PostListItemDto(
-        p.id,
-        p.writer,
-        p.title,
-        p.viewCount,
-        p.likeCount,
-        count(distinct c.id),
-        false,
-        p.thumbnailUrl,
-        p.category.name,
-        p.createdAt
-    )
-    from CommentEntity c
-    join c.post p
-    where c.user.id = :userId
-    group by p.id, p.writer, p.title, p.viewCount, p.likeCount, 
-             p.thumbnailUrl, p.category.name, p.createdAt
-    order by p.createdAt desc
-""")
-    List<PostListItemDto> findPostsCommentedByUser(@Param("userId") Long userId);
+    //totalrow 가져오기
+    @Query(value = """
+    SELECT COUNT(DISTINCT p.ID)
+    FROM POST_ENTITY p
+    JOIN COMMENTS c ON c.POST_ID = p.ID
+    WHERE c.USER_ID = :userId AND c.DELETED = 0
+""", nativeQuery = true)
+    int countPostsCommentedByUser(@Param("userId") Long userId);
 
+    // 유저가 댓글 남긴 글의 목록 가져오기
+    @Query(value = """
+    SELECT p.ID, p.WRITER, p.TITLE, p.IMAGE_URL, p.THUMBNAIL_URL, p.CONTENT,
+           p.CREATED_AT, p.UPDATED_AT, p.DELETED, p.VIEW_COUNT, p.LIKE_COUNT,
+           p.USER_ID, p.CATEGORY_ID
+    FROM (
+        SELECT DISTINCT p.*, ROW_NUMBER() OVER (ORDER BY p.CREATED_AT DESC) AS rn
+        FROM POST_ENTITY p
+        WHERE EXISTS (
+            SELECT 1 FROM COMMENTS c
+            WHERE c.POST_ID = p.ID AND c.USER_ID = :userId AND c.DELETED = 0
+        ) AND p.DELETED = 0
+    ) p
+    WHERE rn BETWEEN :startRow AND :endRow
+    """, nativeQuery = true)
+    List<PostEntity> findPostsCommentedByUserWithPaging(
+            @Param("userId") Long userId,
+            @Param("startRow") int startRow,
+            @Param("endRow") int endRow
+    );
+
+    @Query(value = """
+    SELECT p.ID, p.WRITER, p.TITLE, p.IMAGE_URL, p.THUMBNAIL_URL, p.CONTENT,
+           p.CREATED_AT, p.UPDATED_AT, p.DELETED, p.VIEW_COUNT, p.LIKE_COUNT,
+           p.USER_ID, p.CATEGORY_ID
+    FROM (
+        SELECT p.*, ROW_NUMBER() OVER(ORDER BY p.CREATED_AT DESC) rn
+        FROM POST_ENTITY p
+        WHERE p.USER_ID = :userId AND p.DELETED = 0
+    ) p
+    WHERE rn BETWEEN :startRow AND :endRow
+    """, nativeQuery = true)
+    List<PostEntity> findPostsByUserWithPaging(@Param("userId") Long userId,
+                                               @Param("startRow") int startRow,
+                                               @Param("endRow") int endRow);
+
+
+
+    @Query(value = "SELECT COUNT(p.ID) FROM POST_ENTITY p WHERE p.USER_ID = :userId AND p.DELETED = 0", nativeQuery = true)
+    int countPostsByUser(@Param("userId") Long userId);
 
 }

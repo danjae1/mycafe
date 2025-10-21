@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "comments")
+@Table(name = "COMMENTS")
 @Data
 @Entity
 public class CommentEntity {
@@ -32,6 +32,7 @@ public class CommentEntity {
     private UserEntity user;
 
     @Column(nullable = false)
+    @Builder.Default
     private int likeCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,6 +49,7 @@ public class CommentEntity {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean deleted = false;
 
     @PrePersist

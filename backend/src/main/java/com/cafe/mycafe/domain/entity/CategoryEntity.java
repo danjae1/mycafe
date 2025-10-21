@@ -31,6 +31,7 @@ public class CategoryEntity {
     private String name; // 예: "자유게시판", "질문게시판"
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean deleted = false;
 
 }

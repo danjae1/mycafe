@@ -4,7 +4,6 @@ import com.cafe.mycafe.domain.dto.UserDto.PasswordChangeRequest;
 import com.cafe.mycafe.domain.dto.UserDto.UserSignUpRequestDto;
 import com.cafe.mycafe.domain.dto.UserDto.UserSummaryResponse;
 import com.cafe.mycafe.domain.entity.UserEntity;
-import com.cafe.mycafe.repository.UserRepository;
 
 public interface UserService {
 

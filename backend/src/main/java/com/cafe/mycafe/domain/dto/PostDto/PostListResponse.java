@@ -17,4 +17,6 @@ public class PostListResponse {
     // 게시글 목록 응답
     private List<PostListItemDto> posts; // 게시글 목록
     private PageResponse page;          // 페이징 + 검색 정보
+    private int totalPages;    // 총 페이지 수
+    private long totalElements; // 전체 항목 수
 }

@@ -3,6 +3,7 @@ package com.cafe.mycafe.service;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentListItemDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentRequestDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 
 import java.util.List;
 
@@ -20,6 +21,6 @@ public interface CommentService {
     //댓글삭제하기
     void deleteComment(Long commentId, Long userId);
 
-    List<CommentListItemDto> getCommentSummariesByUserId(Long targetUserId, Long userId);
+    PageResult<CommentListItemDto> getCommentSummariesByUserId(Long targetUserId, Long userId, int pageNum, int pageSize);
 
 }

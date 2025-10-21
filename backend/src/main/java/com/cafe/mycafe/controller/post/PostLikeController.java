@@ -2,6 +2,7 @@ package com.cafe.mycafe.controller.post;
 
 import com.cafe.mycafe.domain.dto.PostDto.PostLikeResponseDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 import com.cafe.mycafe.security.CustomUserDetails;
 import com.cafe.mycafe.service.PostLikeService;
 import lombok.RequiredArgsConstructor;
@@ -20,24 +21,30 @@ public class PostLikeController {
 
     private final PostLikeService postLikeService;
 
-    //마이페지이 내가 좋아요한 글 목록 불러오기
-    @GetMapping("/liked")
+    // 마이페이지 내가 좋아요한 글 목록
+    @GetMapping("/posts/liked/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<PostListItemDto>> getLikedPostByMe(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<PageResult<PostListItemDto>> getLikedPostByMe(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
         Long userId = userDetails.getId();
-
-        List<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId);
+        PageResult<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId, pageNum, pageSize);
         return ResponseEntity.ok(likedPosts);
     }
 
-    //타 유저 좋아요한 글 목록 불러오기
-    @GetMapping("/users/{userId}/liked")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<PostListItemDto>> getLikedPostByUser(@PathVariable  Long userId){
+    // 타 유저 좋아요한 글 목록
+    @GetMapping("/users/{userId}/posts/liked")
+    public ResponseEntity<PageResult<PostListItemDto>> getLikedPostByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
 
-        List<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId);
+        PageResult<PostListItemDto> likedPosts = postLikeService.getLikedPostsByUser(userId, pageNum, pageSize);
         return ResponseEntity.ok(likedPosts);
     }
+
 
     //단일 게시글 좋아요 여부 확인 Ui용
     @GetMapping("/{postId}/like")

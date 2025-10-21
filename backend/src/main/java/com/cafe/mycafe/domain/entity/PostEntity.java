@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "POST_ENTITY")
 public class PostEntity {
 
     @Id
@@ -34,8 +35,10 @@ public class PostEntity {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean deleted = false;
     @Column(nullable = false)
+    @Builder.Default
     private Long viewCount = 0L;
 
     @Column(nullable = false)

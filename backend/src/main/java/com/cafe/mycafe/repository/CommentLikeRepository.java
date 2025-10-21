@@ -30,4 +30,16 @@ public interface CommentLikeRepository extends JpaRepository<CommentLikeEntity, 
     @Query("SELECT cl FROM CommentLikeEntity cl JOIN cl.comment c WHERE cl.user.id = :userId")
     List<CommentLikeEntity> findAllByUserId(@Param("userId") Long userId);
 
+
+    @Query("""
+    SELECT CASE WHEN COUNT(cl) > 0 THEN true ELSE false END
+    FROM CommentLikeEntity cl
+    WHERE cl.comment = :comment AND cl.user = :user
+""")
+    boolean existsByCommentAndUser(@Param("comment") CommentEntity comment,
+                                   @Param("user") UserEntity user);
+
+//    @Query("SELECT COUNT(cl) > 0 FROM CommentLikeEntity cl WHERE cl.comment.id = :commentId AND cl.user.id = :userId")
+//    boolean isLikedByUser(@Param("commentId") Long commentId, @Param("userId") Long userId);
+
 }

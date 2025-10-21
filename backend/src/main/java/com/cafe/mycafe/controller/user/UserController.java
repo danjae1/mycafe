@@ -63,7 +63,7 @@ public class UserController {
         return userService.getUser(userDetails.getUser().getId());
     }
 
-    // ✅ 내 정보 수정
+    // 내 정보 수정
     @PatchMapping("/users")
     public UserEntity updateUser(@AuthenticationPrincipal CustomUserDetails userDetails,
                                    @RequestBody UserEntity updatedUser) {
@@ -78,7 +78,7 @@ public class UserController {
         return ResponseEntity.ok("비밀번호가 변경되었습니다 !!");
     }
 
-    // ✅ 회원 탈퇴
+    // 회원 탈퇴
     @DeleteMapping("/users")
     public void deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
         userService.deleteUser(userDetails.getUser().getId());

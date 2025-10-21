@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "post_likes")
+@Table(name = "POST_LIKES")
 public class PostLikeEntity {
 
     @Id
@@ -28,8 +28,10 @@ public class PostLikeEntity {
     @JoinColumn(name = "USER_ID", nullable = false)
     private UserEntity user;
 
-    @Column(nullable = false)
-    private LocalDateTime likedAt;
+    // 좋아요를 누른 시간 (Builder 패턴 사용 시에도 기본값 자동 설정)
+    @Column(nullable = false, name = "LIKED_AT")
+    @Builder.Default
+    private LocalDateTime likedAt = LocalDateTime.now();
 
     @PrePersist
     public void prePersist(){

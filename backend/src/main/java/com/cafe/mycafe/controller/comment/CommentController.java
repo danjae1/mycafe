@@ -3,6 +3,7 @@ package com.cafe.mycafe.controller.comment;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentListItemDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentRequestDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 import com.cafe.mycafe.domain.entity.CommentEntity;
 import com.cafe.mycafe.domain.entity.UserEntity;
 import com.cafe.mycafe.repository.CommentLikeRepository;
@@ -30,29 +31,36 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // 마이페이지에서 내가 쓴 댓글 목록 조회
+    // 마이페이지에서 현재 로그인한 유저가 작성한 댓글 목록 조회
     @GetMapping("/comments/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CommentListItemDto>> getMyComments(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<PageResult<CommentListItemDto>> getMyComments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
 
         Long userId = userDetails.getId();
-
-        List<CommentListItemDto> comments = commentService.getCommentSummariesByUserId(userId, userId);
+        PageResult<CommentListItemDto> comments = commentService.getCommentSummariesByUserId(userId, userId, pageNum, pageSize);
 
         return ResponseEntity.ok(comments);
-
     }
 
-    // 다른 유저가 쓴 댓글 목록 조회
+    // 특정 유저가 작성한 댓글 목록 조회 (다른 유저 프로필 페이지용)
     @GetMapping("/comments/{targetUserId}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CommentListItemDto>> getCommentsByUser(@PathVariable Long targetUserId,
-                                                                      @AuthenticationPrincipal CustomUserDetails userDetails){
-        Long userId = userDetails.getId();
-        List<CommentListItemDto> comments = commentService.getCommentSummariesByUserId(targetUserId, userId);
+    public ResponseEntity<PageResult<CommentListItemDto>> getCommentsByUser(
+            @PathVariable Long targetUserId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        Long userId = (userDetails != null) ? userDetails.getId() : null;
+
+        PageResult<CommentListItemDto> comments = commentService.getCommentSummariesByUserId(targetUserId, userId, pageNum, pageSize);
 
         return ResponseEntity.ok(comments);
     }
+
+
 
     //게시글 조회시 댓글 목록 같이 불러오기
     @GetMapping("/{categoryPath}/posts/{postId}/comments")

@@ -7,6 +7,7 @@ import com.cafe.mycafe.domain.dto.PostDto.PostListItemDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostListResponse;
 import com.cafe.mycafe.domain.dto.PostDto.PostRequestDto;
 import com.cafe.mycafe.domain.dto.PostDto.PostResponseDto;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.security.CustomUserDetails;
 import com.cafe.mycafe.service.CommentService;
@@ -29,67 +30,71 @@ public class PostController {
     private final PostService postService;
     private final CommentService commentService;
 
-    // 타 유저
+    // 타 유저가 댓글 단 글의 목록
     @GetMapping("/users/{userId}/replied")
-    public ResponseEntity<List<PostListItemDto>> getUserComments(@PathVariable Long userId){
-        List<PostListItemDto> comments = postService.getPostsCommentedByUser(userId, null);
-        return ResponseEntity.ok(comments);
+    public ResponseEntity<PageResult<PostListItemDto>> getUserCommentedPosts(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        PageResult<PostListItemDto> result = postService.getPostsCommentedByUser(userId, null, pageNum, pageSize);
+        return ResponseEntity.ok(result);
     }
 
-    // 본인
+
+
+    // 내가 댓글 단 글의 목록
     @GetMapping("/comments/replied/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<PostListItemDto>> getMyComments(@AuthenticationPrincipal CustomUserDetails userDetails){
-        return ResponseEntity.ok(postService.getPostsCommentedByUser(userDetails.getId(), userDetails.getId()));
+    public ResponseEntity<PageResult<PostListItemDto>> getMyCommentedPosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        PageResult<PostListItemDto> result = postService.getPostsCommentedByUser(userDetails.getId(), userDetails.getId(), pageNum, pageSize);
+        return ResponseEntity.ok(result);
     }
+
 
     //마이페이지 내가 쓴 글 목록 불러오기
     @GetMapping("/posts/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<PostListItemDto>> getMyPosts(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<PageResult<PostListItemDto>> getMyPosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
 
-        Long currentUserId = userDetails.getId(); // 로그인한 사용자 ID
-
-        //마이페이지니까 인자 둘다 나의 Id 삽입
-        List<PostListItemDto> posts = postService.getPostSummariesByUserId(currentUserId, currentUserId);
-
+        PageResult<PostListItemDto> posts = postService.getPostSummariesByUserId(userDetails.getId(), userDetails.getId(), pageNum, pageSize);
         return ResponseEntity.ok(posts);
     }
+
 
     //타유저 프로필에서 해당 유저가 쓴 글 목록 불러오기
     @GetMapping("/users/{targetUserId}/posts")
-    public ResponseEntity<List<PostListItemDto>> getUserPosts(@PathVariable Long targetUserId,
-                                                              @AuthenticationPrincipal CustomUserDetails userDetails){
-        //targetUserId => 내가 보려고 하는 유저의 ID
-        //로그인 했는지 검증
+    public ResponseEntity<PageResult<PostListItemDto>> getUserPosts(
+            @PathVariable Long targetUserId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
         Long currentUserId = (userDetails != null) ? userDetails.getId() : null;
-
-        List<PostListItemDto> posts = postService.getPostSummariesByUserId(targetUserId, currentUserId);
-
+        PageResult<PostListItemDto> posts = postService.getPostSummariesByUserId(targetUserId, currentUserId, pageNum, pageSize);
         return ResponseEntity.ok(posts);
     }
 
+
     //전체 게시글 조회
     @GetMapping("/posts")
-    public ResponseEntity<?> getPosts(
+    public ResponseEntity<PageResult<PostListItemDto>> getPosts(
             @RequestParam(required = false) String categoryPath,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) Long currentUserId
     ) {
-        try {
-            PostListResponse response = postService.getPostsByPath(categoryPath, keyword, pageNum, pageSize, currentUserId);
+
+            PageResult<PostListItemDto> response = postService.getPostsByPath(categoryPath, keyword, pageNum, pageSize, currentUserId);
             return ResponseEntity.ok(response);
-        } catch (CategoryNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "서버 오류 발생"));
-        }
     }
 
 

@@ -32,5 +32,6 @@ public class PostViewEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
+    @Builder.Default
     private LocalDateTime viewedAt = LocalDateTime.now();
 }

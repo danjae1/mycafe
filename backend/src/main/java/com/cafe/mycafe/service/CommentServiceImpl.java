@@ -3,6 +3,7 @@ package com.cafe.mycafe.service;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentListItemDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentRequestDto;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 import com.cafe.mycafe.domain.entity.CommentEntity;
 import com.cafe.mycafe.domain.entity.PostEntity;
 import com.cafe.mycafe.domain.entity.UserEntity;
@@ -14,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -173,28 +171,59 @@ public class CommentServiceImpl implements  CommentService{
         comment.setDeleted(true);
         commentRepository.save(comment);
     }
-    
+
     // targetUser가 쓴 댓글 목록 불러오기
     @Override
-    public List<CommentListItemDto> getCommentSummariesByUserId(Long targetUserId, Long userId) {
-        
-        //targetUserId가 쓴 댓글 목록
-        List<CommentEntity> comments = commentRepository.findAllByUserIdAndDeletedFalseOrderByCreatedAtDesc(targetUserId);
+    public PageResult<CommentListItemDto> getCommentSummariesByUserId(
+            Long targetUserId, Long currentUserId, int pageNum, int pageSize) {
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        int startRow = (pageNum - 1) * pageSize + 1;
+        int endRow = pageNum * pageSize;
 
-        return comments.stream()
-                .map(comment -> CommentListItemDto.builder()
-                        .id(comment.getId())
-                        .writer(comment.getUser().getUsername())
-                        .content(comment.getContent())
-                        .postTitle(comment.getPost().getTitle())
-                        .createdAt(comment.getCreatedAt())
-                        .likeCount(comment.getLikeCount())
-                        .likedByUser(commentLikeRepository.countByCommentAndUser(comment, user)>0
-                        )
-                        .build())
+        // NativeQuery 페이징 적용
+        List<CommentEntity> comments = commentRepository.findPostsCommentsByUserWithPaging(targetUserId, startRow, endRow);
+        Long totalRowLong = commentRepository.countCommentsByUser(targetUserId);
+        int totalRow = totalRowLong != null ? totalRowLong.intValue() : 0;
+
+        Optional<UserEntity> currentUserOpt = (currentUserId != null)
+                ? userRepository.findById(currentUserId)
+                : Optional.empty();
+
+        List<CommentListItemDto> items = comments.stream()
+                .map(comment -> {
+                    boolean likedByUser = currentUserOpt
+                            .map(user -> commentLikeRepository.existsByCommentAndUser(comment, user))
+                            .orElse(false);
+
+                    return CommentListItemDto.builder()
+                            .id(comment.getId())
+                            .writer(comment.getUser().getUsername())
+                            .content(comment.getContent())
+                            .postId(comment.getPost().getId())
+                            .postTitle(comment.getPost().getTitle())
+                            .likeCount(comment.getLikeCount())
+                            .likedByUser(likedByUser)
+                            .createdAt(comment.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
+
+        int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
+        int startPageNum = Math.max(1, pageNum - 2);
+        int endPageNum = Math.min(totalPageCount, pageNum + 2);
+
+        return PageResult.<CommentListItemDto>builder()
+                .content(items)
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .totalRow(totalRow)
+                .totalPageCount(totalPageCount)
+                .startPageNum(startPageNum)
+                .endPageNum(endPageNum)
+                .build();
     }
+
+
+
+
 }

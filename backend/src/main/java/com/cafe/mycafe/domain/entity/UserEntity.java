@@ -37,6 +37,7 @@ public class UserEntity {
     private Grade grade; // BRONZE, SILVER, GOLD
 
     @Column(nullable = false, updatable = false)
+    @Builder.Default
     private LocalDateTime joinDate = LocalDateTime.now();
 
     private LocalDateTime lastLogin;

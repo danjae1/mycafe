@@ -3,6 +3,7 @@ package com.cafe.mycafe.service;
 import com.cafe.mycafe.controller.exceptioncontroller.CategoryNotFoundException;
 import com.cafe.mycafe.domain.dto.CommentDto.CommentResponseDto;
 import com.cafe.mycafe.domain.dto.PostDto.*;
+import com.cafe.mycafe.domain.dto.common.PageResult;
 import com.cafe.mycafe.domain.entity.*;
 import com.cafe.mycafe.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -206,27 +209,37 @@ public class PostServiceImpl implements PostService{
                 .createdAt(post.getCreatedAt())
                 .build();
     }
-    
-    //전체 게시글 조회
-    @Override
-    public PostListResponse getPostsByPath(String categoryPath, String keyword, int pageNum, int pageSize, Long currentUserId) {
 
-        int startRow = (pageNum - 1) * pageSize + 1;  // Oracle ROW_NUMBER 시작은 1부터
+    @Override
+    public PageResult<PostListItemDto> getPostsByPath(String categoryPath, String keyword, int pageNum, int pageSize, Long currentUserId) {
+
+        int startRow = (pageNum - 1) * pageSize + 1;
         int endRow = pageNum * pageSize;
 
         List<PostEntity> posts;
         int totalRow;
 
-        if (categoryPath == null || categoryPath.isEmpty()) {
+        String categoryPathNormalized = (categoryPath != null && !categoryPath.isEmpty())
+                ? (categoryPath.startsWith("/") ? categoryPath : "/" + categoryPath)
+                : null;
+
+        if (categoryPathNormalized == null) {
             posts = postRepository.findPostsWithPaging(startRow, endRow);
             totalRow = postRepository.countAllByDeletedFalse();
         } else {
-
-            String path = categoryPath.startsWith("/") ? categoryPath : "/" + categoryPath;
-            CategoryEntity category = categoryRepository.findByPathAndDeletedFalse(path)
-                    .orElseThrow(() -> new CategoryNotFoundException("카테고리가 없습니다: " + path));
-
-
+            Optional<CategoryEntity> optCategory = categoryRepository.findByPathAndDeletedFalse(categoryPathNormalized);
+            if (optCategory.isEmpty()) {
+                return PageResult.<PostListItemDto>builder()
+                        .content(Collections.emptyList())
+                        .pageNum(pageNum)
+                        .pageSize(pageSize)
+                        .totalRow(0)
+                        .totalPageCount(0)
+                        .startPageNum(0)
+                        .endPageNum(0)
+                        .build();
+            }
+            CategoryEntity category = optCategory.get();
             posts = postRepository.findByCategoryWithPaging(category.getId(), startRow, endRow);
             totalRow = postRepository.countByCategoryNative(category.getId());
         }
@@ -239,83 +252,182 @@ public class PostServiceImpl implements PostService{
                         UserEntity.builder().id(currentUserId).build()
                 );
             }
+            String writer = (post.getUser() != null) ? post.getUser().getUsername() : "알 수 없음";
+            String categoryName = (post.getCategory() != null) ? post.getCategory().getName() : "카테고리 없음";
+
             return PostListItemDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
-                    .writer(post.getUser().getUsername())
+                    .writer(writer)
                     .viewCount(post.getViewCount())
                     .likeCount(post.getLikeCount())
                     .likedByUser(likedByUser)
                     .thumbnailUrl(post.getThumbnailUrl())
-                    .categoryName(post.getCategory().getName())
+                    .categoryName(categoryName)
                     .createdAt(post.getCreatedAt())
                     .build();
-
         }).collect(Collectors.toList());
 
         int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
         int startPageNum = Math.max(1, pageNum - 2);
         int endPageNum = Math.min(totalPageCount, pageNum + 2);
 
-        PageResponse pageResponse = PageResponse.builder()
+        return PageResult.<PostListItemDto>builder()
+                .content(items)
                 .pageNum(pageNum)
+                .pageSize(pageSize)
                 .totalRow(totalRow)
                 .totalPageCount(totalPageCount)
                 .startPageNum(startPageNum)
                 .endPageNum(endPageNum)
                 .build();
-
-        return PostListResponse.builder()
-                .posts(items)
-                .page(pageResponse)
-                .build();
     }
+
+
 
 
 
     @Override
-    public List<PostListItemDto> getPostSummariesByUserId(Long targetUserId, Long userId) {
+    public PageResult<PostListItemDto> getPostSummariesByUserId(Long targetUserId, Long userId, int pageNum, int pageSize) {
 
-        //targetUserId => 조회할 글 작성자
-        //userId => 로그인한 사용자 (컨트롤러에서 PreAuthorize로 검증하지만, 후에 등급별 특수유저별 기능 추가 하기위해 파라미터 추가)
-        List<PostEntity> posts = postRepository.findAllByUser_IdOrderByCreatedAtDesc(targetUserId);
+        int startRow = (pageNum - 1) * pageSize + 1;
+        int endRow = pageNum * pageSize;
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));
+        List<PostEntity> posts = postRepository.findPostsByUserWithPaging(targetUserId, startRow, endRow);
+        int totalRow = postRepository.countPostsByUser(targetUserId);
 
+        UserEntity user = Optional.ofNullable(userId)
+                .map(id -> userRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다.")))
+                .orElse(null);
 
-        return posts.stream()
+        List<PostListItemDto> items = posts.stream()
                 .map(post -> PostListItemDto.builder()
                         .id(post.getId())
-                        .writer(post.getWriter())
+                        .writer(post.getUser().getUsername())
                         .title(post.getTitle())
-                        .likeCount(post.getLikeCount()) // n+1문제 파히기위해 db에서 바로 카운트
-                        .likedByUser(userId != null && postLikeRepository.existsByPostAndUser(post,user))
+                        .likeCount(post.getLikeCount())
+                        .likedByUser(user != null && postLikeRepository.existsByPostAndUser(post, user))
                         .thumbnailUrl(post.getThumbnailUrl())
                         .viewCount(post.getViewCount())
-                        .commentCount((long) post.getComments().size())  // 댓글 수 n+1
+                        .commentCount((long) post.getComments().size())
                         .categoryName(post.getCategory().getName())
                         .createdAt(post.getCreatedAt())
                         .build())
-
                 .collect(Collectors.toList());
+
+        int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
+        int startPageNum = Math.max(1, pageNum - 2);
+        int endPageNum = Math.min(totalPageCount, pageNum + 2);
+
+        return PageResult.<PostListItemDto>builder()
+                .content(items)
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .totalRow(totalRow)
+                .totalPageCount(totalPageCount)
+                .startPageNum(startPageNum)
+                .endPageNum(endPageNum)
+                .build();
     }
 
-    public List<PostListItemDto> getPostsCommentedByUser(Long targetUserId, Long userId) {
-        List<PostListItemDto> posts = postRepository.findPostsCommentedByUser(targetUserId);
 
-        if (userId != null) {
-            UserEntity user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    @Override
+    public PageResult<PostListItemDto> getPostsCommentedByUser(Long targetUserId, Long userId, int pageNum, int pageSize) {
+        int startRow = (pageNum - 1) * pageSize + 1;
+        int endRow = pageNum * pageSize;
 
-            // 사용자가 좋아요한 게시글 표시
-            posts.forEach(post ->
-                    post.setLikedByUser(postLikeRepository.existsByPostIdAndUserId(post.getId(), user.getId()))
-            );
-        }
+        List<PostEntity> posts = postRepository.findPostsCommentedByUserWithPaging(targetUserId, startRow, endRow);
+        int totalRow = postRepository.countPostsCommentedByUser(targetUserId);
 
-        return posts;
+        Optional<UserEntity> currentUserOpt = (userId != null)
+                ? userRepository.findById(userId)
+                : Optional.empty();
+
+        List<PostListItemDto> items = posts.stream()
+                .map(post -> {
+                    boolean likedByUser = currentUserOpt
+                            .map(user -> postLikeRepository.existsByPostIdAndUserId(post.getId(), user.getId()))
+                            .orElse(false);
+
+                    return PostListItemDto.builder()
+                            .id(post.getId())
+                            .writer(post.getUser().getUsername())
+                            .title(post.getTitle())
+                            .viewCount(post.getViewCount())
+                            .likeCount(post.getLikeCount())
+                            .commentCount((long) post.getComments().size())
+                            .thumbnailUrl(post.getThumbnailUrl())
+                            .categoryName(post.getCategory().getName())
+                            .createdAt(post.getCreatedAt())
+                            .likedByUser(likedByUser)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
+        int startPageNum = Math.max(1, pageNum - 2);
+        int endPageNum = Math.min(totalPageCount, pageNum + 2);
+
+        return PageResult.<PostListItemDto>builder()
+                .content(items)
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .totalRow(totalRow)
+                .totalPageCount(totalPageCount)
+                .startPageNum(startPageNum)
+                .endPageNum(endPageNum)
+                .build();
     }
+
+    @Override
+    public PageResult<PostListItemDto> getPostsLikedByUser(Long targetUserId, Long userId, int pageNum, int pageSize) {
+        int startRow = (pageNum - 1) * pageSize + 1;
+        int endRow = pageNum * pageSize;
+
+        List<PostEntity> posts = postLikeRepository.findLikedPostsByUserWithPaging(targetUserId, startRow, endRow);
+        int totalRow = postLikeRepository.countLikedPostsByUser(targetUserId);
+
+        Optional<UserEntity> currentUserOpt = (userId != null)
+                ? userRepository.findById(userId)
+                : Optional.empty();
+
+        List<PostListItemDto> items = posts.stream()
+                .map(post -> {
+                    boolean likedByUser = currentUserOpt
+                            .map(user -> postLikeRepository.existsByPostIdAndUserId(post.getId(), user.getId()))
+                            .orElse(false);
+
+                    return PostListItemDto.builder()
+                            .id(post.getId())
+                            .writer(post.getUser().getUsername())
+                            .title(post.getTitle())
+                            .viewCount(post.getViewCount())
+                            .likeCount(post.getLikeCount())
+                            .commentCount((long) post.getComments().size())
+                            .thumbnailUrl(post.getThumbnailUrl())
+                            .categoryName(post.getCategory().getName())
+                            .createdAt(post.getCreatedAt())
+                            .likedByUser(likedByUser)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
+        int startPageNum = Math.max(1, pageNum - 2);
+        int endPageNum = Math.min(totalPageCount, pageNum + 2);
+
+        return PageResult.<PostListItemDto>builder()
+                .content(items)
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .totalRow(totalRow)
+                .totalPageCount(totalPageCount)
+                .startPageNum(startPageNum)
+                .endPageNum(endPageNum)
+                .build();
+    }
+
 
 
 }
